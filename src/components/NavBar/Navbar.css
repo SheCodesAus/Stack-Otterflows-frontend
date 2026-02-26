@@ -1,0 +1,431 @@
+:root {
+  --bg: #07492d;
+  --text: #fdf4e1;
+  --line: rgba(245, 232, 205, 0.18);
+  --accent: #fabb4c;
+  --accent2: #f6a551;
+
+  /* used by your dropdown + panels */
+  --panel: rgba(12, 18, 14, 0.55);
+
+  --font: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* =========================
+   NAV BAR (base)
+   ========================= */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+  overflow-x: clip;
+}
+
+.navbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  min-width: 0; /* allow flex children to shrink */
+}
+
+/* Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.navbar-logo-img {
+  height: 55px;
+  width: auto;
+  display: block;
+}
+
+/* =========================
+   LINKS (desktop)
+   ========================= */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 8px;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden; /* prevents pushing into actions when tight */
+}
+
+.navbar-link {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 650;
+  font-size: 0.98rem;
+  font-family: var(--font);
+  padding: 8px 10px;
+  border-radius: 999px;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.navbar-link:hover {
+  background: rgba(245, 232, 205, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Logout button styled like a link */
+.navbar-link--button {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.98rem;
+  font-weight: 650;
+  padding: 8px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.navbar-link--button:hover {
+  background: rgba(245, 232, 205, 0.08);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   ACTIONS (icons + CTA)
+   ========================= */
+.navbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* Icon buttons */
+.icon-btn {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  fill: currentColor;
+}
+
+/* CTA */
+.cta-btn {
+  text-decoration: none;
+  color: #183b2c;
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-family: var(--font);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.cta-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+/* =========================
+   SEARCH (closed + open)
+   ========================= */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.search-input {
+  box-sizing: border-box;
+  width: 0;
+  opacity: 0;
+  padding: 0;
+  border-width: 0;
+
+  border-style: solid;
+  border-color: rgba(245, 232, 205, 0.18);
+  outline: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.10);
+  color: var(--text);
+
+  font-weight: 700;
+  font-family: var(--font);
+  transition: width 0.18s ease, opacity 0.18s ease, padding 0.18s ease, border-width 0.18s ease;
+  min-width: 0; /* iOS focus/click fix */
+}
+
+.search.open .search-input {
+  width: 220px; /* desktop open width */
+  opacity: 1;
+  padding: 10px 12px;
+  border-width: 1px;
+}
+
+/* =========================
+   AUTOCOMPLETE DROPDOWN
+   ========================= */
+.search-suggest {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.search-suggest__item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.search-suggest__item:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.search-suggest__title {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.search-suggest__meta {
+  margin-top: 3px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* Mobile-only icons are hidden by default (desktop) */
+.login-icon {
+  display: none;
+}
+
+.hamburger {
+  display: none;
+}
+
+/* =========================
+   MOBILE PANEL
+   ========================= */
+.mobile-panel {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 12px;
+  display: none;
+}
+
+.mobile-panel.open {
+  display: block;
+}
+
+.mobile-links {
+  margin-top: 10px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.10);
+  border-radius: 18px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-link {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 800;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: rgba(245, 232, 205, 0.06);
+  font-family: var(--font);
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.mobile-link:hover {
+  background: rgba(245, 232, 205, 0.10);
+}
+
+.mobile-link--button {
+  font-size: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: rgba(245, 232, 205, 0.06);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: 800;
+  padding: 12px 12px;
+  border-radius: 14px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mobile-link--button:hover {
+  background: rgba(245, 232, 205, 0.10);
+}
+
+.mobile-cta {
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+}
+
+.mobile-cta:hover {
+  color: #183b2c;
+  filter: brightness(1.03);
+}
+
+/* =========================
+   SEARCH MODE (all sizes)
+   ========================= */
+.navbar.search-mode .navbar-links,
+.navbar.search-mode .cta-btn {
+  display: none;
+}
+
+.navbar.search-mode .navbar-actions {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.navbar.search-mode .search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.navbar.search-mode .search-input {
+  width: auto !important;
+  opacity: 1 !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  border-width: 1px;
+}
+
+/* =========================
+   DESKTOP ONLY (>=1081px)
+   ========================= */
+@media (min-width: 1081px) {
+  .icon-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(245, 232, 205, 0.08);
+    border-color: rgba(245, 232, 205, 0.25);
+  }
+
+  .mobile-panel {
+    display: none !important;
+  }
+}
+
+/* =========================
+   MOBILE (<=1080px)
+   ========================= */
+@media (max-width: 1080px) {
+  .navbar-inner {
+    max-width: none;
+    width: 100%;
+    padding: 12px 14px;
+    justify-content: space-between;
+  }
+
+  /* switch to hamburger menu sooner */
+  .navbar-links {
+    display: none;
+  }
+
+  .cta-btn {
+    display: none;
+  }
+
+  /* show mobile icons */
+  .login-icon {
+    display: grid;
+  }
+
+  .hamburger {
+    display: grid;
+  }
+
+  /* equal spacing between search / login / hamburger */
+  .navbar-actions {
+    gap: 18px;
+  }
+
+  /* bigger tap targets on mobile */
+  .icon-btn {
+    width: 58px;
+    height: 58px;
+    border: none;
+    background: transparent;
+    transition: background 0.12s ease;
+  }
+
+  .icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .icon-btn:hover,
+  .icon-btn:active {
+    transform: none;
+    background: rgba(245, 232, 205, 0.10);
+  }
+
+  /* input should be smaller when opened on mobile */
+  .search.open .search-input {
+    width: 160px;
+  }
+
+  /* search-mode on mobile: hide login + hamburger to give space */
+  .navbar.search-mode .login-icon,
+  .navbar.search-mode .hamburger {
+    display: none !important;
+  }
+
+  .navbar.search-mode .search-input {
+    height: 44px;
+  }
+}

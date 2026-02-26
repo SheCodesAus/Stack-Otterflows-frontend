@@ -13,6 +13,6 @@ export default async function getFundraisers() {
     return data;
   } catch (error) {
     console.error("Error fetching fundraisers:", error);
-    return [];
+    return []; // This means the data is stubbed. 
   }
 }

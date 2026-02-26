@@ -66,3 +66,7 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+.app-main {
+  padding: 32px 16px 64px;
+  color: #fdf4e1; /* soft light text if you want */
+}

@@ -1,11 +1,11 @@
 // src/components/NavBar.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import getFundraisers from "../api/get-fundraisers";
+import getFundraisers from "../../api/get-fundraisers";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
 import "./NavBar.css";
 
-import bfLogo from "../assets/backyard-festival-logo.png";
+import bfLogo from "../../assets/react.svg";
 
 function NavBar() {
   const navigate = useNavigate();
@@ -149,9 +149,9 @@ function NavBar() {
           to="/"
           className="navbar-logo"
           onClick={closeMenu}
-          aria-label="Backyard Festival Home"
+          aria-label="Stack Otterflows Home"
         >
-          <img className="navbar-logo-img" src={bfLogo} alt="Backyard Festival" />
+          <img className="navbar-logo-img" src={bfLogo} alt="Stack Otterflows" />
         </Link>
 
         {/* Desktop navigation */}
