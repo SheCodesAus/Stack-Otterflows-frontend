@@ -1,7 +1,7 @@
 // src/api/get-fundraisers.js
 
 // You can adjust the URL later to point at your real backend
-const API_BASE = "http://localhost:8000"; // or whatever your DRF base will be
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000"; // or whatever your DRF base will be
 
 export default async function getFundraisers() {
   try {

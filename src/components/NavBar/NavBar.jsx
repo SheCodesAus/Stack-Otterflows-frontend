@@ -1,35 +1,26 @@
-// src/components/NavBar.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+// src/components/NavBar/NavBar.jsx
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import getFundraisers from "../../api/get-fundraisers";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
+import { useFundraiserAutocomplete } from "../../hooks/useFundraiserAutocomplete";
 import "./NavBar.css";
 
 import bfLogo from "../../assets/react.svg";
+
+import NavLinks from "./NavLinks";
+import NavSearch from "./NavSearch";
+import MobileMenu from "./MobileMenu";
 
 function NavBar() {
   const navigate = useNavigate();
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Search UI
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const searchInputRef = useRef(null);
-
-  // Suggestions
-  const [allFundraisers, setAllFundraisers] = useState([]);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-
-  // Auth status now comes from our custom hook - new feature!!!!
+  // Auth status
   const { tokenExists, clearToken } = useAuthStatus();
 
-  // Focus input when opening search
-  useEffect(() => {
-    if (searchOpen) {
-      setTimeout(() => searchInputRef.current?.focus(), 0);
-    }
-  }, [searchOpen]);
+  // Search hook (fundraisers for now, later pods)
+  const search = useFundraiserAutocomplete();
 
   // Close mobile menu if desktop
   useEffect(() => {
@@ -40,97 +31,31 @@ function NavBar() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-
-  // Load fundraisers once for autocomplete suggestions
-  useEffect(() => {
-    let isMounted = true;
-
-    async function load() {
-      try {
-        const data = await getFundraisers();
-        if (isMounted) setAllFundraisers(Array.isArray(data) ? data : []);
-      } catch {
-        // Not fatal — the search still works by navigating to /fundraisers?q=
-        if (isMounted) setAllFundraisers([]);
-      }
-    }
-
-    load();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const closeMenu = () => setMenuOpen(false);
 
   const toggleMenu = () => {
     setMenuOpen((v) => !v);
-    setSearchOpen(false); // don't fight with search UI
-    setSuggestionsOpen(false);
-  };
-
-  const openSearch = () => {
-    setSearchOpen(true);
-    setMenuOpen(false);
-    setSuggestionsOpen(true);
-  };
-
-  const closeSearch = () => {
-    setSearchOpen(false);
-    setSuggestionsOpen(false);
-    setQuery("");
-  };
-
-  const toggleSearch = () => {
-    setSearchOpen((prev) => {
-      const next = !prev;
-      if (!next) {
-        setQuery("");
-        setSuggestionsOpen(false);
-      } else {
-        setSuggestionsOpen(true);
-        setTimeout(() => searchInputRef.current?.focus(), 0);
-      }
-      return next;
-    });
-    setMenuOpen(false);
+    search.closeSearch(); // don't fight with search UI
   };
 
   const handleLogout = () => {
-    clearToken();   // from our hook
+    clearToken();
     closeMenu();
     navigate("/");
   };
 
-  const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-
-    return allFundraisers
-      .filter((f) => {
-        const haystack = [f.title, f.description, f.location, f.category]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return haystack.includes(q);
-      })
-      .slice(0, 7);
-  }, [query, allFundraisers]);
-
   const onPickSuggestion = (fundraiserId) => {
-    // Adjust this if your detail route is different:
     navigate(`/fundraisers/${fundraiserId}`);
-    closeSearch();
+    search.closeSearch();
   };
 
   const onSubmitSearch = (e) => {
     e.preventDefault();
 
-    const q = query.trim();
+    const q = search.query.trim();
     if (!q) {
       navigate("/fundraisers");
-      closeSearch();
+      search.closeSearch();
       return;
     }
 
@@ -138,11 +63,11 @@ function NavBar() {
     params.set("q", q);
 
     navigate(`/fundraisers?${params.toString()}`);
-    closeSearch();
+    search.closeSearch();
   };
 
   return (
-    <header className={`navbar ${searchOpen ? "search-mode" : ""}`}>
+    <header className={`navbar ${search.searchOpen ? "search-mode" : ""}`}>
       <div className="navbar-inner">
         {/* Logo */}
         <Link
@@ -155,117 +80,33 @@ function NavBar() {
         </Link>
 
         {/* Desktop navigation */}
-        <nav className="navbar-links" aria-label="Primary navigation">
-          <Link to="/" className="navbar-link">
-            Home
-          </Link>
-          <Link to="/fundraisers" className="navbar-link">
-            Browse Festivals
-          </Link>
-          <Link to="/resources" className="navbar-link">
-            Resources
-          </Link>
-          <Link to="/how-it-works" className="navbar-link">
-            How it Works
-          </Link>
-
-          {!tokenExists ? (
-            <>
-              <Link to="/signup" className="navbar-link">
-                Sign Up
-              </Link>
-              <Link to="/login" className="navbar-link">
-                Login
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link to="/profile" className="navbar-link">
-                My Dashboard
-              </Link>
-              <button
-                type="button"
-                className="navbar-link navbar-link--button"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-            </>
-          )}
-        </nav>
+        <NavLinks tokenExists={tokenExists} onLogout={handleLogout} />
 
         {/* Actions */}
         <div className="navbar-actions">
-          {/* Search */}
-          <form className={`search ${searchOpen ? "open" : ""}`} onSubmit={onSubmitSearch}>
-            <button
-              type="button"
-              className="icon-btn search-btn"
-              onClick={toggleSearch}
-              aria-label={searchOpen ? "Close search" : "Open search"}
-              aria-expanded={searchOpen}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="icon">
-                <path d="M10 18a8 8 0 1 1 5.293-14.293A8 8 0 0 1 10 18Zm0-2a6 6 0 1 0-4.243-1.757A5.78 5.78 0 0 0 10 16Zm8.707 5.293-4.11-4.11 1.414-1.414 4.11 4.11-1.414 1.414Z" />
-              </svg>
-            </button>
+          <NavSearch
+            searchOpen={search.searchOpen}
+            toggleSearch={() => {
+              search.toggleSearch();
+              setMenuOpen(false);
+            }}
+            openSearch={() => {
+              search.openSearch();
+              setMenuOpen(false);
+            }}
+            closeSearch={search.closeSearch}
+            query={search.query}
+            setQuery={search.setQuery}
+            suggestions={search.suggestions}
+            suggestionsOpen={search.suggestionsOpen}
+            setSuggestionsOpen={search.setSuggestionsOpen}
+            inputRef={search.inputRef}
+            onSubmitSearch={onSubmitSearch}
+            onPickSuggestion={onPickSuggestion}
+            placeholder="Search festivals…"
+          />
 
-            <input
-              ref={searchInputRef}
-              className="search-input"
-              type="search"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setSuggestionsOpen(true);
-              }}
-              onFocus={() => {
-                openSearch();
-                setSuggestionsOpen(true);
-              }}
-              onBlur={() => {
-                // allow click on suggestion before blur closes it
-                setTimeout(() => setSuggestionsOpen(false), 120);
-              }}
-              placeholder="Search festivals…"
-              aria-label="Search festivals"
-              autoComplete="off"
-            />
-
-            {/* Suggestions dropdown */}
-            {searchOpen && suggestionsOpen && suggestions.length > 0 && (
-              <div className="search-suggest" role="listbox" aria-label="Search suggestions">
-                {suggestions.map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    className="search-suggest__item"
-                    role="option"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => onPickSuggestion(f.id)}
-                  >
-                    <div className="search-suggest__title">{f.title}</div>
-                    {f.location && <div className="search-suggest__meta">{f.location}</div>}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {searchOpen && (
-              <button
-                type="button"
-                className="icon-btn search-close"
-                onClick={closeSearch}
-                aria-label="Close search"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="icon">
-                  <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29 10.59 10.6l6.3-6.31 1.41 1.42Z" />
-                </svg>
-              </button>
-            )}
-          </form>
-
-          {/* Always visible; route itself is protected by RequireAuth */}
+          {/* Route is protected by RequireAuth */}
           <Link to="/fundraisers/new" className="cta-btn" onClick={closeMenu}>
             Create Festival
           </Link>
@@ -316,62 +157,12 @@ function NavBar() {
       </div>
 
       {/* Mobile menu */}
-      <div id="mobile-nav" className={`mobile-panel ${menuOpen ? "open" : ""}`}>
-        <nav className="mobile-links" aria-label="Mobile navigation">
-          <Link to="/" className="mobile-link" onClick={closeMenu}>
-            Home
-          </Link>
-          <Link to="/fundraisers" className="mobile-link" onClick={closeMenu}>
-            Browse Festivals
-          </Link>
-          <Link to="/resources" className="mobile-link" onClick={closeMenu}>
-            Resources
-          </Link>
-          <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>
-            How it Works
-          </Link>
-
-          {!tokenExists ? (
-            <>
-              <Link to="/signup" className="mobile-link" onClick={closeMenu}>
-                Sign Up
-              </Link>
-              <Link to="/login" className="mobile-link" onClick={closeMenu}>
-                Login
-              </Link>
-              <Link
-                to="/fundraisers/new"
-                className="mobile-link mobile-cta"
-                onClick={closeMenu}
-              >
-                Create Festival
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link to="/profile" className="mobile-link" onClick={closeMenu}>
-                My Dashboard
-              </Link>
-
-              <button
-                type="button"
-                className="mobile-link mobile-link--button"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-
-              <Link
-                to="/fundraisers/new"
-                className="mobile-link mobile-cta"
-                onClick={closeMenu}
-              >
-                Create Festival
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
+      <MobileMenu
+        open={menuOpen}
+        tokenExists={tokenExists}
+        onClose={closeMenu}
+        onLogout={handleLogout}
+      />
     </header>
   );
 }

@@ -1,4 +1,11 @@
+/* This is for our colour palette and design settings - aka paint box. Looks at things like border radius, spacing, global design settings*/
+
 :root {
+
+  /* layout */ 
+  --content-max: 1040px;  /* Explore + Dashboard width */
+  --content-pad: 16px;
+
   /* Base */
   --bg: #0B0D2A;              /* Indigo Night */
   --bg2: #12163A;             /* Slightly lighter indigo for depth */
@@ -16,7 +23,7 @@
 
   /* CTA (starlight gold, cooler + more “cosmic”) */
   --accent: #ffbf0e;
-  --accent2: #fdcc44;
+  --accent2: #f7bf26;
 
   /* Optional: galaxy secondary (for chips / highlights) */
   --primary: #6C63FF;         /* Indigo-violet */
