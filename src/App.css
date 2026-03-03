@@ -26,9 +26,30 @@
   --accent2: #f7bf26;
 
   /* Optional: galaxy secondary (for chips / highlights) */
-  --primary: #6C63FF;         /* Indigo-violet */
-  --secondary: #2ECC9F;       /* Teal aurora */
+  /*--primary: #6C63FF;         /* Indigo-violet */
+  /*--secondary: #2ECC9F;       /* Teal aurora */
+
+  /* Danger / delete */
   --cherry: #9B2E3C;          /* Cherry Rose accent */
+
+  /* Ink for text on bright buttons */
+  --ink: #0B0D2A;
+
+  /* Secondary gradient partner for lilac */
+  --primary: #8B7BFF;
+  --primary2: #6C63FF;
+
+  /* Tertiary (blue) */
+  --info: #38D8FF;
+  --info2: #22B7FF;
+
+  /* Success (strong) */
+  --success: #2FE07A;
+  --success2: #18C76A;
+
+  /* Optional coral if you ever want it */
+  --coral: #ff4f6d;
+  --coral2: #e83255;
 
   /* Typography */
   --font: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
