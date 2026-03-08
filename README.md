@@ -451,12 +451,12 @@ This website is targeted to this group in order to provide a central, interactiv
 <img width="1500" height="1500" alt="Logo_Pods" src="https://github.com/user-attachments/assets/f7967cec-6647-4aa4-8573-4392bcf027c3" />
 
 ### Colours
-#### Primary
+
 <img width="1500" height="2000" alt="Primary Colours" src="https://github.com/user-attachments/assets/0062e3b1-1bfb-456e-b150-2cd77ccaa93b" />
 
-#### Secondary
+<img width="1500" height="2000" alt="Screenshot 2026-03-08 at 6 54 14 pm" src="https://github.com/user-attachments/assets/acd34b01-5d41-45d6-945b-ff2ab7f72ab0" />
 
-![](./img/secondary.png)
+<img width="1500" height="2000" alt="Screenshot 2026-03-08 at 6 54 23 pm" src="https://github.com/user-attachments/assets/8262521a-7915-485d-bf37-7544715cf462" />
 
 ### Font
 We have chosen to work with **Nunito** from Google Fonts.
@@ -471,4 +471,5 @@ This is how to import it into our code:
 
 **This is what Nunito Font looks like:**
 <img width="1500" height="2000" alt="Screenshot 2026-03-08 at 6 16 25 pm" src="https://github.com/user-attachments/assets/f728cd4f-d31f-4c6f-8086-2c6f4da0fb73" />
+
 
