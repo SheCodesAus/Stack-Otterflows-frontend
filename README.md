@@ -35,8 +35,6 @@
     - [Wireframes](#wireframes)
     - [Logo](#logo)
     - [Colours](#colours)
-      - [Primary](#primary)
-      - [Secondary](#secondary)
     - [Font](#font)
 
 
@@ -471,5 +469,6 @@ This is how to import it into our code:
 
 **This is what Nunito Font looks like:**
 <img width="1500" height="2000" alt="Screenshot 2026-03-08 at 6 16 25 pm" src="https://github.com/user-attachments/assets/f728cd4f-d31f-4c6f-8086-2c6f4da0fb73" />
+
 
 
