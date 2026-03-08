@@ -1,4 +1,4 @@
-## Your Product Name
+### Your Product Name
 
 **Team Name:** Stack OTTERflows
 
@@ -18,7 +18,6 @@
   - [Features](#features)
     - [Summary](#summary)
     - [Users](#users)
-    - [Sticky Notes](#sticky-notes)
     - [Collections](#collections)
     - [Pages/Endpoint Functionality](#pagesendpoint-functionality)
     - [Nice To Haves](#nice-to-haves)
@@ -31,12 +30,9 @@
     - [API Specification](#api-specification)
     - [Object Definitions](#object-definitions)
       - [Users](#users-1)
-      - [Sticky Notes](#sticky-notes-1)
     - [Database Schema](#database-schema)
   - [Front-end Implementation](#front-end-implementation)
     - [Wireframes](#wireframes)
-      - [Home Page](#home-page)
-      - [Collection List Page](#collection-list-page)
     - [Logo](#logo)
     - [Colours](#colours)
       - [Primary](#primary)
@@ -115,7 +111,7 @@ Administrative roles oversee pod settings and membership, while a centralised da
 
 ### Nice To Haves
 
-- **The "Nudge" System:** Automated notifications sent to a "Buddy" or Pod Admin if a member hasn't submitted a check-in within their defined timeframe.
+- **The "Nudge" System and Notifications:** Automated notifications sent to a "Buddy" or Pod Admin if a member hasn't submitted a check-in within their defined timeframe.
 - **Milestone Celebrations:** Interactive animations (e.g., confetti) or digital trophies triggered when a member hits a 7-day or 30-day consistency streak.
 - **Pod Chat/Comments:** A dedicated space on the Pod Dashboard for members to leave words of encouragement on each other’s "sticky note" check-ins.
 - **Public vs Private Pods:** The ability for members to create invite-only pods for sensitive goals or private coaching.
@@ -133,6 +129,8 @@ Administrative roles oversee pod settings and membership, while a centralised da
 
 ## Technical Implementation
 
+<img width="1500" height="500" alt="APSO (3)" src="https://github.com/user-attachments/assets/059536ef-2fc2-4b72-aec9-0538a3ac0245" />
+
 ### Back-End
 
 - Django / DRF API
@@ -144,6 +142,7 @@ Administrative roles oversee pod settings and membership, while a centralised da
 - HTML/CSS
 
 ### Git & Deployment
+
 - Heroku
 - Netlify
 - GitHub
@@ -154,7 +153,7 @@ We will also use Insomnia to ensure API endpoints are working smoothly (we will 
 
 ## Target Audience
 
-This website has one major target audience within a broad age range: individuals who want to be held accountable for their goals, whether professional or personal, by their peers and mentors.
+This website has one major target audience within a broad age range: individuals who want to be held accountable for their goals, whether professional or personal, by their peers and mentors. Age-range 15-55.
 
 Core Team and Client (administrators) will use this website to manage pod categories, oversee global progress, and manage user roles. 
 
@@ -167,115 +166,192 @@ Pod Members (laypeople) will use this website to post their progress on a "stick
 This website is targeted to this group in order to provide a central, interactive space for digital accountability, preventing the loss of manual tracking data and fostering community motivation.
 
 ## Back-end Implementation
-### API Specification
+
+<img width="1500" height="500" alt="3" src="https://github.com/user-attachments/assets/1b61fa42-1003-412b-b131-0a6d8750d518" />
+
+## API Specification
 
 ### Authentication
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| POST | `/auth/register` | Register a new user account | `{ "username": "string", "full_name": "string", "email": "string", "password": "string", "role": "member/approver" }` | 201 | Public |
-| POST | `/auth/login` | Authenticate a user and return an access token | `{ "email": "string", "password": "string" }` | 200 | Public |
-| POST | `/auth/logout` | Log out the current user and invalidate their session/token | NA | 200 | Authenticated user |
-| GET | `/auth/me` | Return the currently logged-in user's profile | NA | 200 | Authenticated user |
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Register | Public users | Creates a new user account with username, email, display name, and password |
+| Log in | Registered users | Authenticates user and returns token |
+| Token authentication | Registered users | Token must be included in protected requests |
+| View current user profile | Registered users | Returns details for the authenticated user |
+| Update profile | Registered users | Allows user to edit basic profile details such as display name |
 
-### Users
+| Endpoint | Functionality |
+| :--- | :--- |
+| POST /api/auth/register/ | Create a new user account |
+| POST /api/auth/token/ | Return authentication token for valid credentials |
+| GET /api/me/ | Retrieve authenticated user details |
+| PATCH /api/me/ | Update authenticated user profile |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/users` | Retrieve all users | NA | 200 | Admin |
-| GET | `/users/{id}` | Retrieve a specific user profile | NA | 200 | Admin or authenticated user |
-| PUT | `/users/{id}` | Update a user's profile | `{ "full_name": "string", "email": "string", "avatar": "string", "bio": "string", "social_link": "string" }` | 200 | Admin or matching user |
-| DELETE | `/users/{id}` | Deactivate or remove a user account | NA | 200 | Admin |
+### Authentication Notes
 
-### Roles
+| Item | Value |
+| :--- | :--- |
+| Authentication type | Token authentication |
+| Header format | `Authorization: Token <token>` |
+| Protected routes | All routes except public registration and login |
+| Login input | Username and password |
+| Login response | `{ "token": "..." }` |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/roles` | Retrieve available system roles | NA | 200 | Admin |
-| GET | `/roles/{id}` | Retrieve a specific role definition | NA | 200 | Admin |
+## Users
 
-### Categories
+| Type | Access | Role type assignment |
+| :--- | :--- | :--- |
+| Registered User | <br> - Register and log in <br> - Create and manage personal goals <br> - Connect with other users <br> - Assign accountability buddies <br> - Submit and review check-ins <br> - Create and join pods <br> - Comment on goals and pod activity <br> - View and edit their profile | Main platform user |
+| Accountability Buddy | <br> - Accept or decline goal assignments <br> - View assigned goals <br> - Approve or reject check-ins <br> - Comment on goal progress | Trusted connection who verifies a user’s progress |
+| Pod Member | <br> - Join accountability pods <br> - View pod goals <br> - Submit pod check-ins <br> - Approve or reject pod check-ins <br> - Comment on pod goals and activity | Member of a collaborative accountability pod |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/categories` | Retrieve all pod categories | NA | 200 | Authenticated user |
-| GET | `/categories/{id}` | Retrieve a single category | NA | 200 | Authenticated user |
-| POST | `/categories` | Create a new category | `{ "title": "string", "description": "string", "approver_id": integer, "default_goal_duration": "string" }` | 201 | Admin |
-| PUT | `/categories/{id}` | Update a category | `{ "title": "string", "description": "string", "approver_id": integer, "default_goal_duration": "string" }` | 200 | Admin |
-| DELETE | `/categories/{id}` | Archive or remove a category | NA | 200 | Admin |
-| GET | `/categories/{id}/pods` | Retrieve all pods within a category | NA | 200 | Authenticated user |
-| GET | `/categories/{id}/checkins/export` | Export category check-ins as CSV | Optional query params: `status`, `from`, `to` | 200 | Admin |
+## Connections
 
-### Pods
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Send connection invite | Registered users | Creates a connection request between two users |
+| View connections | Registered users | Displays pending and accepted connections |
+| Accept connection invite | Invited user | Connection status becomes accepted |
+| Decline connection invite | Invited user | Connection request is declined |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/pods` | Retrieve all pods | Optional query params: `category_id`, `goal_type`, `status` | 200 | Authenticated user |
-| GET | `/pods/{id}` | Retrieve details for a single pod | NA | 200 | Authenticated user |
-| POST | `/pods` | Create a new pod | `{ "title": "string", "category_id": integer, "goal_type": "individual/group", "start_date": "datetime", "end_date": "datetime" }` | 201 | Admin or Approver |
-| PUT | `/pods/{id}` | Update a pod | `{ "title": "string", "category_id": integer, "goal_type": "individual/group", "start_date": "datetime", "end_date": "datetime" }` | 200 | Admin or Approver |
-| DELETE | `/pods/{id}` | Archive or remove a pod | NA | 200 | Admin |
-| POST | `/pods/{id}/join` | Join a pod | NA | 200 | Member |
-| POST | `/pods/{id}/leave` | Leave a pod | NA | 200 | Member |
-| GET | `/pods/{id}/members` | Retrieve all members of a pod | NA | 200 | Authenticated user |
-| GET | `/pods/{id}/dashboard` | Retrieve live dashboard data for a pod | NA | 200 | Authenticated user |
-| GET | `/pods/{id}/leaderboard` | Retrieve member leaderboard for a pod | NA | 200 | Pod members, Approver, Admin |
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /connections/ | List all user connections |
+| POST /connections/ | Send connection invite |
+| POST /connections/{connection_id}/accept/ | Accept connection invite |
+| POST /connections/{connection_id}/decline/ | Decline connection invite |
 
-### Goals
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/goals` | Retrieve goals | Optional query params: `pod_id`, `user_id`, `type` | 200 | Authenticated user |
-| GET | `/goals/{id}` | Retrieve a single goal | NA | 200 | Authenticated user |
-| POST | `/goals` | Create a new goal | `{ "pod_id": integer, "user_id": integer, "title": "string", "target_value": integer, "cadence": "daily/weekly/monthly", "goal_type": "individual/group" }` | 201 | Member, Approver, Admin |
-| PUT | `/goals/{id}` | Update a goal | `{ "title": "string", "target_value": integer, "cadence": "daily/weekly/monthly" }` | 200 | Goal owner, Approver, Admin |
-| DELETE | `/goals/{id}` | Archive or remove a goal | NA | 200 | Goal owner, Admin |
+## Individual Goals
 
-### Check-ins
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Create goal | Registered users | Goal includes title, metric type, target value, and optional dates |
+| View goals | Goal owner | Displays all goals created by the user |
+| View goal detail | Goal owner and assigned buddies | Shows progress and goal activity |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/checkins` | Retrieve check-ins | Optional query params: `pod_id`, `category_id`, `user_id`, `status`, `from`, `to` | 200 | Authenticated user |
-| GET | `/checkins/{id}` | Retrieve a specific check-in | NA | 200 | Authenticated user |
-| POST | `/checkins` | Submit a new check-in | `{ "pod_id": integer, "goal_id": integer, "value": integer, "comment": "string", "hashtags": ["string"], "contribution_type": "individual/group" }` | 201 | Pod member |
-| PUT | `/checkins/{id}` | Edit a check-in | `{ "value": integer, "comment": "string", "hashtags": ["string"] }` | 200 | Admin or Approver |
-| PUT | `/checkins/{id}/status` | Approve, reject, or archive a check-in | `{ "status": "pending/approved/rejected/archived", "review_comment": "string" }` | 200 | Admin, Approver, Buddy |
-| GET | `/checkins/export` | Export check-ins as CSV | Optional query params: `pod_id`, `category_id`, `status` | 200 | Admin |
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /goals/ | List user goals |
+| POST /goals/ | Create a new goal |
+| GET /goals/{goal_id}/ | Retrieve goal details |
 
-### Verification Queue
+## Goal Assignments
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/verification-queue` | Retrieve all pending check-ins requiring review | Optional query params: `category_id`, `pod_id` | 200 | Approver, Admin |
-| GET | `/verification-queue/{id}` | Retrieve a pending check-in for review | NA | 200 | Approver, Admin |
-| POST | `/verification-queue/{id}/approve` | Approve a pending check-in | `{ "review_comment": "string" }` | 200 | Approver, Admin, assigned Buddy |
-| POST | `/verification-queue/{id}/reject` | Reject a pending check-in | `{ "review_comment": "string" }` | 200 | Approver, Admin, assigned Buddy |
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Assign accountability buddy | Goal owner | Buddy must be a connected user |
+| View goal assignments | Goal owner | Displays assigned buddies for a goal |
+| Accept assignment | Assigned buddy | Allows buddy to review check-ins |
+| Decline assignment | Assigned buddy | Removes assignment request |
 
-### Buddy System
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /goal-assignments/ | List goal assignments |
+| GET /goal-assignments/?goal={goal_id} | List assignments for a specific goal |
+| POST /goal-assignments/ | Assign buddy to goal |
+| POST /goal-assignments/{assignment_id}/accept/ | Accept assignment |
+| POST /goal-assignments/{assignment_id}/decline/ | Decline assignment |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/buddies` | Retrieve buddy assignments | Optional query params: `user_id`, `pod_id` | 200 | Authenticated user |
-| POST | `/buddies` | Assign a buddy to a member | `{ "member_id": integer, "buddy_id": integer, "pod_id": integer }` | 201 | Admin or Approver |
-| PUT | `/buddies/{id}` | Update a buddy assignment | `{ "buddy_id": integer }` | 200 | Admin or Approver |
-| DELETE | `/buddies/{id}` | Remove a buddy assignment | NA | 200 | Admin or Approver |
+## Individual Check-ins
 
-### Notifications
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Submit check-in | Goal owner | Records progress toward goal completion |
+| View check-ins | Goal owner and assigned buddies | Displays check-in history |
+| Approve check-in | Accountability buddy | Confirms progress submitted by goal owner |
+| Reject check-in | Accountability buddy | Rejects check-in with optional reason |
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/notifications` | Retrieve a user's notifications | NA | 200 | Authenticated user |
-| PUT | `/notifications/preferences` | Update notification settings | `{ "email_notifications": true, "reminder_frequency": "daily/weekly", "deadline_alerts": true }` | 200 | Authenticated user |
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /checkins/?goal={goal_id} | List check-ins for a goal |
+| POST /checkins/ | Submit a check-in |
+| POST /checkins/{checkin_id}/approve/ | Approve check-in |
+| POST /checkins/{checkin_id}/reject/ | Reject check-in |
 
-### Dashboard and Analytics
+## Individual Comments
 
-| HTTP Method | Endpoint | Purpose | Request Body | Success Code | Authorisation |
-|---|---|---|---|---|---|
-| GET | `/dashboard/admin` | Retrieve global system dashboard metrics | NA | 200 | Admin |
-| GET | `/dashboard/approver` | Retrieve category and pod moderation metrics | NA | 200 | Approver |
-| GET | `/dashboard/member` | Retrieve personal progress, streaks, and milestones | NA | 200 | Member |
-| GET | `/analytics/categories/{id}` | Retrieve aggregated analytics for a category | NA | 200 | Admin, Approver |
-| GET | `/analytics/pods/{id}` | Retrieve aggregated analytics for a pod | NA | 200 | Admin, Approver |
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| View comments | Goal owner and assigned buddies | Displays discussion related to a goal |
+| Add comment | Goal owner and assigned buddies | Enables encouragement and feedback |
+
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /comments/?goal={goal_id} | Retrieve comments for a goal |
+| POST /comments/ | Create a new comment |
+
+## Pods
+
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Create pod | Registered users | Pod creator becomes the pod owner |
+| View pods | Pod members | Lists pods where the user is a member |
+| View pod detail | Pod members | Displays pod information, members, and goals |
+
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /pods/ | List pods for the user |
+| POST /pods/ | Create a new pod |
+| GET /pods/{pod_id}/ | Retrieve pod details |
+
+## Pod Memberships
+
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Invite member to pod | Pod members or owner | Invites another user to join the pod |
+| View pod memberships | Pod members | Displays current and pending pod members |
+| Accept pod invite | Invited user | Membership status becomes active |
+| Decline pod invite | Invited user | Invitation is declined |
+
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /pod-memberships/ | List memberships |
+| GET /pod-memberships/?pod={pod_id} | List memberships for a specific pod |
+| POST /pod-memberships/ | Invite user to pod |
+| POST /pod-memberships/{membership_id}/accept/ | Accept pod invitation |
+| POST /pod-memberships/{membership_id}/decline/ | Decline pod invitation |
+
+## Pod Goals
+
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Create pod goal | Pod members | Creates a shared goal for the pod |
+| View pod goals | Pod members | Displays goals created within the pod |
+
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /pod-goals/?pod={pod_id} | List goals for a pod |
+| POST /pod-goals/ | Create pod goal |
+
+## Pod Check-ins
+
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| Submit pod check-in | Pod members | Records progress toward a pod goal |
+| View pod check-ins | Pod members | Displays pod check-in history |
+| Approve pod check-in | Pod members (excluding creator) | Verifies another member’s check-in |
+| Reject pod check-in | Pod members (excluding creator) | Reject check-in with optional reason |
+
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /pod-checkins/?pod_goal={pod_goal_id} | List check-ins for a pod goal |
+| POST /pod-checkins/ | Submit pod check-in |
+| POST /pod-checkins/{checkin_id}/approve/ | Approve pod check-in |
+| POST /pod-checkins/{checkin_id}/reject/ | Reject pod check-in |
+
+## Pod Comments
+
+| Feature | Access | Notes / Conditions |
+| :--- | :--- | :--- |
+| View pod comments | Pod members | Displays discussion within pod goals |
+| Add pod comment | Pod members | Enables feedback and encouragement |
+
+| Endpoint | Functionality |
+| :--- | :--- |
+| GET /pod-comments/?pod_goal={pod_goal_id} | Retrieve pod comments |
+| POST /pod-comments/ | Create pod comment |
 
 ## Example API Objects
 
@@ -335,50 +411,64 @@ This website is targeted to this group in order to provide a central, interactiv
 ```
 ### Database Schema
 
-<img width="1500" height="900" alt="Screenshot 2026-03-07 at 12 52 09 pm" src="https://github.com/user-attachments/assets/9f146d4b-778a-4fb6-a250-fbc068e06fc7" />
+> [!IMPORTANT]  
+> Please zoom in to see the database details better
 
-<img width="1500" height="900" alt="Screenshot 2026-03-07 at 12 52 49 pm" src="https://github.com/user-attachments/assets/9e32a000-d62e-449d-86c0-b4e6c962d86b" />
+<img width="1500" height="500" alt="db1" src="https://github.com/user-attachments/assets/f47c72c8-ee81-43ee-85bb-e66ec864784c" />
+
+<img width="1500" height="500" alt="db2" src="https://github.com/user-attachments/assets/64d4f3f0-cdbe-4017-b61f-5947299d6712" />
 
 ## Front-end Implementation
 
+<img width="1500" height="500" alt="4" src="https://github.com/user-attachments/assets/0502cc10-5657-4aa0-917f-38a334205904" />
+
+> [!NOTE]  
+> The visual features outlined below are subject to change in response to client feedback, evolving project requirements, or development constraints.
+
 ### Wireframes
 
-> [!NOTE]  
-> Insert image(s) of your wireframes (could be a photo of hand-drawn wireframes or a screenshot of wireframes created using a tool such as https://www.mockflow.com/).
+[Name of screen]
+<img width="1500" height="2000" alt="6" src="https://github.com/user-attachments/assets/8843702a-69bf-46cb-abfd-c2969b1b4eba" />
+[Add some details later...]
 
-See all wireframes and how Admins, Approvers and Students would see the Win Wall website: https://www.figma.com/file/cvP0Kc7lAX39Fvo12C5aLa/Win-Wall?node-id=22%3A1345 
+[Name of screen]
+<img width="1500" height="2000" alt="7" src="https://github.com/user-attachments/assets/ebccc5d9-d659-4517-938a-11a29444bc14" />
+[Add some details later...]
 
-#### Home Page
-![](./img/homepage.png)
+[Name of screen]
+<img width="1500" height="2000" alt="8" src="https://github.com/user-attachments/assets/6b96cd5e-6b36-41ec-bf5e-9bbba07189c9" />
+[Add some details later...]
 
-#### Collection List Page
-![](./img/listpage.png)
+[Name of screen]
+<img width="1500" height="2000" alt="9" src="https://github.com/user-attachments/assets/6e6af33b-b478-443f-a9e5-dd6fc3cb23fe" />
+[Add some details later...]
 
-> [!NOTE]  
-> etc...
+[Name of screen]
+<img width="1500" height="2000" alt="10" src="https://github.com/user-attachments/assets/46e69c2f-6383-49c0-bb1a-46b1baac5e83" />
+[Add some details later...]
 
 ### Logo
-![](./img/logo.png)
+<img width="1500" height="1500" alt="Logo_Pods" src="https://github.com/user-attachments/assets/f7967cec-6647-4aa4-8573-4392bcf027c3" />
 
 ### Colours
 #### Primary
-
-![](./img/primary.png)
+<img width="1500" height="2000" alt="Primary Colours" src="https://github.com/user-attachments/assets/0062e3b1-1bfb-456e-b150-2cd77ccaa93b" />
 
 #### Secondary
 
 ![](./img/secondary.png)
 
 ### Font
+We have chosen to work with **Nunito** from Google Fonts.
 
-(We will create a ‘highlight-text’ font style in CSS with the glow effect as per the above - to use on hero section)
-Raleway
-Google fonts:
+This is how to import it into our code:
 
-```css
-@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap');
-font-family: 'Raleway', sans-serif;
 ```
-(When Raleway is not available the standard font to be used is the Calibri font family)
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap");
+</style>
+```
 
-![](./img/fonts.png)
+**This is what Nunito Font looks like:**
+<img width="1500" height="2000" alt="Screenshot 2026-03-08 at 6 16 25 pm" src="https://github.com/user-attachments/assets/f728cd4f-d31f-4c6f-8086-2c6f4da0fb73" />
+
