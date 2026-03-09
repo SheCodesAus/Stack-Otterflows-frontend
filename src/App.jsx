@@ -1,7 +1,7 @@
-// src/App.jsx
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
+import RequireAuth from "./components/RequireAuth";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -24,19 +24,80 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignUpPage />} />
-
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/connections" element={<ConnectionsPage />} />
-
-        <Route path="/goals" element={<GoalsPage />} />
-        <Route path="/goals/new" element={<CreateGoalPage />} />
-        <Route path="/goals/:goalId" element={<GoalDetailPage />} />
-
-        <Route path="/pods" element={<PodsPage />} />
-        <Route path="/pods/new" element={<CreatePodPage />} />
-        <Route path="/pods/:podId" element={<PodDetailPage />} />
-
         <Route path="/how-it-works" element={<HowItWorksPage />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <DashboardPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/connections"
+          element={
+            <RequireAuth>
+              <ConnectionsPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/goals"
+          element={
+            <RequireAuth>
+              <GoalsPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/goals/new"
+          element={
+            <RequireAuth>
+              <CreateGoalPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/goals/:goalId"
+          element={
+            <RequireAuth>
+              <GoalDetailPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/pods"
+          element={
+            <RequireAuth>
+              <PodsPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/pods/new"
+          element={
+            <RequireAuth>
+              <CreatePodPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/pods/:podId"
+          element={
+            <RequireAuth>
+              <PodDetailPage />
+            </RequireAuth>
+          }
+        />
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
