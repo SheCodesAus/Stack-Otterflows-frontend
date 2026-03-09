@@ -26,8 +26,10 @@
   --accent2: #f7bf26;
 
   /* Optional: galaxy secondary (for chips / highlights) */
-  /*--primary: #6C63FF;         /* Indigo-violet */
-  /*--secondary: #2ECC9F;       /* Teal aurora */
+  --indigo: #6C63FF;         /* Indigo-violet */
+  --indigo-light: #a29dff;   
+  --teal: #2ECC9F;       /* Teal aurora */
+  --teal-blue: #14d4b4;
 
   /* Danger / delete */
   --cherry: #9B2E3C;          /* Cherry Rose accent */
@@ -46,6 +48,12 @@
   /* Success (strong) */
   --success: #2FE07A;
   --success2: #18C76A;
+
+  --section-heading: #28d4b1;
+  --section-heading2: #24c7a8;
+  --section-heading3: #20b89b;
+  
+
 
   /* Optional coral if you ever want it */
   --coral: #ff4f6d;
