@@ -2,31 +2,29 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
-import { useFundraiserAutocomplete } from "../../hooks/useFundraiserAutocomplete";
 import "./NavBar.css";
 
 import bfLogo from "../../assets/react.svg";
 
 import NavLinks from "./NavLinks";
-import NavSearch from "./NavSearch";
 import MobileMenu from "./MobileMenu";
 
 function NavBar() {
   const navigate = useNavigate();
-
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Auth status
   const { tokenExists, clearToken } = useAuthStatus();
 
-  // Search hook (fundraisers for now, later pods)
-  const search = useFundraiserAutocomplete();
+  // Create button destination
+  const createTarget = tokenExists ? "/dashboard" : "/register";
 
   // Close mobile menu if desktop
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth >= 900) setMenuOpen(false);
     };
+
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -35,7 +33,6 @@ function NavBar() {
 
   const toggleMenu = () => {
     setMenuOpen((v) => !v);
-    search.closeSearch(); // don't fight with search UI
   };
 
   const handleLogout = () => {
@@ -44,74 +41,33 @@ function NavBar() {
     navigate("/");
   };
 
-  const onPickSuggestion = (fundraiserId) => {
-    navigate(`/fundraisers/${fundraiserId}`);
-    search.closeSearch();
-  };
-
-  const onSubmitSearch = (e) => {
-    e.preventDefault();
-
-    const q = search.query.trim();
-    if (!q) {
-      navigate("/fundraisers");
-      search.closeSearch();
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("q", q);
-
-    navigate(`/fundraisers?${params.toString()}`);
-    search.closeSearch();
-  };
-
   return (
-    <header className={`navbar ${search.searchOpen ? "search-mode" : ""}`}>
+    <header className="navbar">
       <div className="navbar-inner">
-        {/* Logo */}
         <Link
           to="/"
           className="navbar-logo"
           onClick={closeMenu}
           aria-label="Stack Otterflows Home"
         >
-          <img className="navbar-logo-img" src={bfLogo} alt="Stack Otterflows" />
+          <img
+            className="navbar-logo-img"
+            src={bfLogo}
+            alt="Stack Otterflows"
+          />
         </Link>
 
-        {/* Desktop navigation */}
         <NavLinks tokenExists={tokenExists} onLogout={handleLogout} />
 
-        {/* Actions */}
         <div className="navbar-actions">
-          <NavSearch
-            searchOpen={search.searchOpen}
-            toggleSearch={() => {
-              search.toggleSearch();
-              setMenuOpen(false);
-            }}
-            openSearch={() => {
-              search.openSearch();
-              setMenuOpen(false);
-            }}
-            closeSearch={search.closeSearch}
-            query={search.query}
-            setQuery={search.setQuery}
-            suggestions={search.suggestions}
-            suggestionsOpen={search.suggestionsOpen}
-            setSuggestionsOpen={search.setSuggestionsOpen}
-            inputRef={search.inputRef}
-            onSubmitSearch={onSubmitSearch}
-            onPickSuggestion={onPickSuggestion}
-            placeholder="Search festivals…"
-          />
-
-          {/* Route is protected by RequireAuth */}
-          <Link to="/fundraisers/new" className="cta-btn btn primary" onClick={closeMenu}>
-            Create Pod
+          <Link
+            to={createTarget}
+            className="cta-btn btn primary"
+            onClick={closeMenu}
+          >
+            Create
           </Link>
 
-          {/* Mobile login / logout icon */}
           {!tokenExists ? (
             <Link
               to="/login"
@@ -136,7 +92,6 @@ function NavBar() {
             </button>
           )}
 
-          {/* Hamburger */}
           <button
             type="button"
             className="icon-btn hamburger"
@@ -156,7 +111,6 @@ function NavBar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       <MobileMenu
         open={menuOpen}
         tokenExists={tokenExists}

@@ -5,39 +5,48 @@ function MobileMenu({ open, tokenExists, onClose, onLogout }) {
   return (
     <div id="mobile-nav" className={`mobile-panel ${open ? "open" : ""}`}>
       <nav className="mobile-links" aria-label="Mobile navigation">
-        <Link to="/" className="mobile-link" onClick={onClose}>
-          Home
-        </Link>
-        <Link to="/fundraisers" className="mobile-link" onClick={onClose}>
-          Browse Festivals
-        </Link>
-        <Link to="/resources" className="mobile-link" onClick={onClose}>
-          Resources
-        </Link>
-        <Link to="/how-it-works" className="mobile-link" onClick={onClose}>
-          How it Works
-        </Link>
-
         {!tokenExists ? (
           <>
-            <Link to="/signup" className="mobile-link" onClick={onClose}>
-              Sign Up
+            <Link to="/" className="mobile-link" onClick={onClose}>
+              Home
             </Link>
+
+            <Link to="/how-it-works" className="mobile-link" onClick={onClose}>
+              How It Works
+            </Link>
+
             <Link to="/login" className="mobile-link" onClick={onClose}>
               Login
             </Link>
+
+            <Link to="/register" className="mobile-link" onClick={onClose}>
+              Sign Up
+            </Link>
+
             <Link
-              to="/fundraisers/new"
+              to="/register"
               className="mobile-link mobile-cta"
               onClick={onClose}
             >
-              Create Festival
+              Create
             </Link>
           </>
         ) : (
           <>
-            <Link to="/profile" className="mobile-link" onClick={onClose}>
+            <Link to="/dashboard" className="mobile-link" onClick={onClose}>
               My Dashboard
+            </Link>
+
+            <Link to="/goals" className="mobile-link" onClick={onClose}>
+              Goals
+            </Link>
+
+            <Link to="/pods" className="mobile-link" onClick={onClose}>
+              Pods
+            </Link>
+
+            <Link to="/how-it-works" className="mobile-link" onClick={onClose}>
+              How It Works
             </Link>
 
             <button
@@ -49,11 +58,11 @@ function MobileMenu({ open, tokenExists, onClose, onLogout }) {
             </button>
 
             <Link
-              to="/fundraisers/new"
+              to="/dashboard"
               className="mobile-link mobile-cta"
               onClick={onClose}
             >
-              Create Festival
+              Create
             </Link>
           </>
         )}

@@ -4,33 +4,42 @@ import { Link } from "react-router-dom";
 function NavLinks({ tokenExists, onLogout }) {
   return (
     <nav className="navbar-links" aria-label="Primary navigation">
-      <Link to="/" className="navbar-link">
-        Home
-      </Link>
-      <Link to="/fundraisers" className="navbar-link">
-        Browse Festivals
-      </Link>
-      <Link to="/resources" className="navbar-link">
-        Resources
-      </Link>
-      <Link to="/how-it-works" className="navbar-link">
-        How it Works
-      </Link>
-
       {!tokenExists ? (
         <>
-          <Link to="/signup" className="navbar-link">
-            Sign Up
+          <Link to="/" className="navbar-link">
+            Home
           </Link>
+
+          <Link to="/how-it-works" className="navbar-link">
+            How It Works
+          </Link>
+
           <Link to="/login" className="navbar-link">
             Login
+          </Link>
+
+          <Link to="/register" className="navbar-link">
+            Sign Up
           </Link>
         </>
       ) : (
         <>
-          <Link to="/profile" className="navbar-link">
+          <Link to="/dashboard" className="navbar-link">
             My Dashboard
           </Link>
+
+          <Link to="/goals" className="navbar-link">
+            Goals
+          </Link>
+
+          <Link to="/pods" className="navbar-link">
+            Pods
+          </Link>
+
+          <Link to="/how-it-works" className="navbar-link">
+            How It Works
+          </Link>
+
           <button
             type="button"
             className="navbar-link navbar-link--button"
