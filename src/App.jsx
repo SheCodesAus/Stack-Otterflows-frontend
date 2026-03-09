@@ -65,6 +65,10 @@ function PodDetailPage() {
   return <h1>Pod Detail</h1>;
 }
 
+function HowItWorksPage() {
+  return <h1>How It Works</h1>;
+}
+
 function NotFoundPage() {
   return <h1>404</h1>;
 }
@@ -87,7 +91,7 @@ function App() {
         <Route path="/pods" element={<PodsPage />} />
         <Route path="/pods/new" element={<CreatePodPage />} />
         <Route path="/pods/:podId" element={<PodDetailPage />} />
-
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

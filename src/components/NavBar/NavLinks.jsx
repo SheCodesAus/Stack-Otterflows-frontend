@@ -42,7 +42,7 @@ function NavLinks({ tokenExists, onLogout }) {
 
           <button
             type="button"
-            className="navbar-link navbar-link--button"
+            className="navbar-link navbar-link--reset"
             onClick={onLogout}
           >
             Logout

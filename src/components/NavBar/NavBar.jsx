@@ -13,13 +13,10 @@ function NavBar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Auth status
   const { tokenExists, clearToken } = useAuthStatus();
 
-  // Create button destination
   const createTarget = tokenExists ? "/dashboard" : "/register";
 
-  // Close mobile menu if desktop
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth >= 900) setMenuOpen(false);

@@ -1,15 +1,15 @@
-
 /* =========================
-   NAV BAR (base)
+   NAV BAR
    ========================= */
+
 .navbar {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
   width: 100%;
   overflow-x: clip;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
 }
 
 .navbar-inner {
@@ -20,48 +20,52 @@
   align-items: center;
   gap: 14px;
   box-sizing: border-box;
-  min-width: 0; /* allow flex children to shrink */
-}
-
-/* Logo */
-.navbar-logo {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  line-height: 1;
-  flex: 0 0 auto;
-  min-width: 100px; /* THIS GETS ADJUSTED WITH THE NEW LOGO */
-  justify-content: flex-start; /* THIS GETS ADJUSTED WITH THE NEW LOGO */
-}
-
-.navbar-logo-img {
-  height: 55px;
-  width: auto;
-  display: block;
+  min-width: 0;
 }
 
 /* =========================
-   LINKS (desktop)
+   LOGO
    ========================= */
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 0 auto;
+  min-width: 100px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.navbar-logo-img {
+  display: block;
+  width: auto;
+  height: 55px;
+}
+
+/* =========================
+   DESKTOP LINKS
+   ========================= */
+
 .navbar-links {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: 8px;
-  white-space: nowrap;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden; /* prevents pushing into actions when tight */
+  margin-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .navbar-link {
-  text-decoration: none;
-  color: var(--text);
-  font-weight: 650;
-  font-size: 0.98rem;
-  font-family: var(--font);
   padding: 6px 10px;
   border-radius: 999px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.98rem;
+  font-weight: 650;
+  text-decoration: none;
   transition: transform 0.12s ease, background 0.12s ease;
 }
 
@@ -70,31 +74,31 @@
   transform: translateY(-1px);
 }
 
-/* Logout button styled like a link */
-.navbar-link--button {
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  border: none;
+.navbar-link,
+.navbar-link--reset {
+  padding: 6px 10px;
+  border-radius: 999px;
   color: var(--text);
   font-family: var(--font);
   font-size: 0.98rem;
   font-weight: 650;
-  padding: 8px 10px;
-  border-radius: 999px;
-  cursor: pointer;
   line-height: 1;
+  text-decoration: none;
   transition: transform 0.12s ease, background 0.12s ease;
 }
 
-.navbar-link--button:hover {
-  background: rgba(245, 232, 205, 0.08);
-  transform: translateY(-1px);
+.navbar-link--reset {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 /* =========================
-   ACTIONS (icons + CTA)
+   ACTIONS
    ========================= */
+
 .navbar-actions {
   margin-left: auto;
   display: flex;
@@ -105,129 +109,35 @@
   min-width: 0;
 }
 
-/* Icon buttons */
+/* Yellow CTA */
+.cta-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* Mobile icon buttons */
 .icon-btn {
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--text);
   width: 42px;
   height: 42px;
-  border-radius: 999px;
   display: grid;
   place-items: center;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text);
   cursor: pointer;
   transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
 
 .icon {
+  display: block;
   width: 24px;
   height: 24px;
-  display: block;
   fill: currentColor;
 }
 
-/* CTA */
-.cta-btn {
-  text-decoration: none;
-  color: #191826;
-  background: linear-gradient(180deg, var(--accent), var(--accent2));
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-weight: 900;
-  font-family: var(--font);
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-  white-space: nowrap;
-  flex: 0 0 auto;
-  transition: transform 0.12s ease, filter 0.12s ease;
-}
-
-.cta-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-}
-
-/* =========================
-   SEARCH (closed + open)
-   ========================= */
-.search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.search-input {
-  box-sizing: border-box;
-  width: 0;
-  opacity: 0;
-  padding: 0;
-  border-width: 0;
-
-  border-style: solid;
-  border-color: rgba(245, 232, 205, 0.18);
-  outline: none;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.10);
-  color: var(--text);
-
-  font-weight: 700;
-  font-family: var(--font);
-  transition: width 0.18s ease, opacity 0.18s ease, padding 0.18s ease, border-width 0.18s ease;
-  min-width: 0; /* iOS focus/click fix */
-}
-
-.search.open .search-input {
-  width: 220px; /* desktop open width */
-  opacity: 1;
-  padding: 10px 12px;
-  border-width: 1px;
-}
-
-/* =========================
-   AUTOCOMPLETE DROPDOWN
-   ========================= */
-.search-suggest {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  z-index: 70;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-}
-
-.search-suggest__item {
-  width: 100%;
-  text-align: left;
-  padding: 10px 12px;
-  background: transparent;
-  border: 0;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.search-suggest__item:hover {
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.search-suggest__title {
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.search-suggest__meta {
-  margin-top: 3px;
-  font-size: 12px;
-  opacity: 0.85;
-}
-
-/* Mobile-only icons are hidden by default (desktop) */
+/* Hidden on desktop by default */
 .login-icon {
   display: none;
 }
@@ -239,11 +149,12 @@
 /* =========================
    MOBILE PANEL
    ========================= */
+
 .mobile-panel {
+  display: none;
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 16px 12px;
-  display: none;
 }
 
 .mobile-panel.open {
@@ -252,25 +163,25 @@
 
 .mobile-links {
   margin-top: 10px;
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(0, 0, 0, 0.10);
-  border-radius: 18px;
-  padding: 10px;
   display: grid;
   gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.10);
 }
 
 .mobile-link {
-  text-decoration: none;
-  color: var(--text);
-  font-weight: 800;
-  padding: 12px 12px;
-  border-radius: 14px;
-  background: rgba(245, 232, 205, 0.06);
-  font-family: var(--font);
   display: block;
   width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(245, 232, 205, 0.06);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: 800;
   text-align: left;
+  text-decoration: none;
 }
 
 .mobile-link:hover {
@@ -278,20 +189,20 @@
 }
 
 .mobile-link--button {
-  font-size: 1rem;
   appearance: none;
   -webkit-appearance: none;
-  border: none;
-  background: rgba(245, 232, 205, 0.06);
-  color: var(--text);
-  font-family: var(--font);
-  font-weight: 800;
-  padding: 12px 12px;
-  border-radius: 14px;
   display: block;
   width: 100%;
-  text-align: left;
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(245, 232, 205, 0.06);
+  color: var(--text);
   cursor: pointer;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: left;
 }
 
 .mobile-link--button:hover {
@@ -309,35 +220,9 @@
 }
 
 /* =========================
-   SEARCH MODE (all sizes)
+   DESKTOP ONLY
    ========================= */
-.navbar.search-mode .navbar-links,
-.navbar.search-mode .cta-btn {
-  display: none;
-}
 
-.navbar.search-mode .navbar-actions {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.navbar.search-mode .search {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.navbar.search-mode .search-input {
-  width: auto !important;
-  opacity: 1 !important;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 10px 12px;
-  border-width: 1px;
-}
-
-/* =========================
-   DESKTOP ONLY (>=1081px)
-   ========================= */
 @media (min-width: 1081px) {
   .icon-btn:hover {
     transform: translateY(-1px);
@@ -351,17 +236,17 @@
 }
 
 /* =========================
-   MOBILE (<=1080px)
+   MOBILE
    ========================= */
+
 @media (max-width: 1080px) {
   .navbar-inner {
-    max-width: none;
     width: 100%;
+    max-width: none;
     padding: 12px 14px;
     justify-content: space-between;
   }
 
-  /* switch to hamburger menu sooner */
   .navbar-links {
     display: none;
   }
@@ -370,7 +255,6 @@
     display: none;
   }
 
-  /* show mobile icons */
   .login-icon {
     display: grid;
   }
@@ -379,12 +263,10 @@
     display: grid;
   }
 
-  /* equal spacing between search / login / hamburger */
   .navbar-actions {
     gap: 18px;
   }
 
-  /* bigger tap targets on mobile */
   .icon-btn {
     width: 58px;
     height: 58px;
@@ -402,20 +284,5 @@
   .icon-btn:active {
     transform: none;
     background: rgba(245, 232, 205, 0.10);
-  }
-
-  /* input should be smaller when opened on mobile */
-  .search.open .search-input {
-    width: 160px;
-  }
-
-  /* search-mode on mobile: hide login + hamburger to give space */
-  .navbar.search-mode .login-icon,
-  .navbar.search-mode .hamburger {
-    display: none !important;
-  }
-
-  .navbar.search-mode .search-input {
-    height: 44px;
   }
 }
