@@ -3,75 +3,19 @@ import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
 
-function HomePage() {
-  return (
-    <>
-      <h1>Stack Otterflows</h1>
-      <p>Welcome page / public landing page</p>
-    </>
-  );
-}
-
-function LoginPage() {
-  return <h1>Login</h1>;
-}
-
-function RegisterPage() {
-  return <h1>Register</h1>;
-}
-
-function DashboardPage() {
-  return (
-    <>
-      <h1>Dashboard</h1>
-      <p>
-        Quick actions, pending connections, buddy approvals, pod invites,
-        and recent activity.
-      </p>
-    </>
-  );
-}
-
-function ConnectionsPage() {
-  return (
-    <>
-      <h1>Connections</h1>
-      <p>Sent invites, received invites, accepted connections, blocked users.</p>
-    </>
-  );
-}
-
-function GoalsPage() {
-  return <h1>Goals</h1>;
-}
-
-function CreateGoalPage() {
-  return <h1>Create Goal</h1>;
-}
-
-function GoalDetailPage() {
-  return <h1>Goal Detail</h1>;
-}
-
-function PodsPage() {
-  return <h1>Pods</h1>;
-}
-
-function CreatePodPage() {
-  return <h1>Create Pod</h1>;
-}
-
-function PodDetailPage() {
-  return <h1>Pod Detail</h1>;
-}
-
-function HowItWorksPage() {
-  return <h1>How It Works</h1>;
-}
-
-function NotFoundPage() {
-  return <h1>404</h1>;
-}
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import DashboardPage from "./pages/DashboardPage";
+import ConnectionsPage from "./pages/ConnectionsPage";
+import GoalsPage from "./pages/GoalsPage";
+import CreateGoalPage from "./pages/CreateGoalPage";
+import CreatePodPage from "./pages/CreatePodPage";
+import GoalDetailPage from "./pages/GoalDetailPage";
+import PodsPage from "./pages/PodsPage";
+import PodDetailPage from "./pages/PodDetailPage";
+import HowItWorksPage from "./pages/HowItWorksPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   return (
@@ -79,7 +23,7 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register" element={<SignUpPage />} />
 
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/connections" element={<ConnectionsPage />} />
@@ -91,6 +35,7 @@ function App() {
         <Route path="/pods" element={<PodsPage />} />
         <Route path="/pods/new" element={<CreatePodPage />} />
         <Route path="/pods/:podId" element={<PodDetailPage />} />
+
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
