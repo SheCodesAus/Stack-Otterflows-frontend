@@ -107,8 +107,8 @@ function NavBar() {
           />
 
           {/* Route is protected by RequireAuth */}
-          <Link to="/fundraisers/new" className="cta-btn" onClick={closeMenu}>
-            Create Festival
+          <Link to="/fundraisers/new" className="cta-btn btn primary" onClick={closeMenu}>
+            Create Pod
           </Link>
 
           {/* Mobile login / logout icon */}

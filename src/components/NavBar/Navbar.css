@@ -300,11 +300,11 @@
 
 .mobile-cta {
   background: linear-gradient(180deg, var(--accent), var(--accent2));
-  color: #183b2c;
+  color: var(--bg);
 }
 
 .mobile-cta:hover {
-  color: #183b2c;
+  color: var(--text);
   filter: brightness(1.03);
 }
 
