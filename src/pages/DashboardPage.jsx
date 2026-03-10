@@ -122,24 +122,26 @@ export default function DashboardPage() {
     user?.display_name?.trim() || user?.username?.trim() || "";
 
   return (
-    <section className="page-shell">
-      <header className="dashboard-hero">
-        <h1>{welcomeName ? `Welcome back, ${welcomeName}` : "Welcome back"}</h1>
-        <p>Here’s your accountability snapshot for this week.</p>
-      </header>
+    <section className="page-shell dashboard-page">
+      <section className="dashboard-intro-panel">
+        <header className="dashboard-hero">
+          <h1>{welcomeName ? `Welcome back, ${welcomeName}` : "Welcome back"}</h1>
+          <p>Here’s your accountability snapshot for this week.</p>
+        </header>
 
-      <section className="dashboard-actions">
-        <Link to="/goals/new" className="btn primary">
-          Create Goal
-        </Link>
+        <div className="dashboard-actions">
+          <Link to="/goals/new" className="btn primary">
+            Create Goal
+          </Link>
 
-        <Link to="/pods/new" className="btn primary">
-          Create Pod
-        </Link>
+          <Link to="/pods/new" className="btn primary">
+            Create Pod
+          </Link>
 
-        <Link to="/connections" className="btn primary">
-          Invite Buddy
-        </Link>
+          <Link to="/connections" className="btn primary">
+            Invite Buddy
+          </Link>
+        </div>
       </section>
 
       <section className="dashboard-panel">
