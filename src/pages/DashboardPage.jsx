@@ -128,6 +128,12 @@ export default function DashboardPage() {
           <h1>{welcomeName ? `Welcome back, ${welcomeName}` : "Welcome back"}</h1>
           <p>Here’s your accountability snapshot for this week.</p>
         </header>
+      </section>
+
+      <section className="dashboard-panel dashboard-panel--quick-actions">
+        <div className="dashboard-panel__header">
+          <h2>Quick Actions</h2>
+        </div>
 
         <div className="dashboard-actions">
           <Link to="/goals/new" className="btn primary">
@@ -232,33 +238,6 @@ export default function DashboardPage() {
 
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
-          <h2>Needs My Attention</h2>
-        </div>
-
-        <div className="dashboard-list">
-          {attentionItems.map((item) => (
-            <article
-              key={item.id}
-              className="dashboard-row dashboard-row--stacked"
-            >
-              <div className="dashboard-row__content">
-                <p className="dashboard-attention-text">{item.description}</p>
-
-                <div className="dashboard-row__meta">
-                  <span className="attention-pill">{item.label}</span>
-                </div>
-              </div>
-
-              <Link to={item.actionTo} className="btn secondary">
-                {item.actionLabel}
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="dashboard-panel">
-        <div className="dashboard-panel__header">
           <h2>My Pods</h2>
           <Link to="/pods" className="btn link">
             View all
@@ -286,8 +265,35 @@ export default function DashboardPage() {
 
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
+          <h2>Pending Check-ins</h2>
+        </div>
+
+        <div className="dashboard-list">
+          {attentionItems.map((item) => (
+            <article
+              key={item.id}
+              className="dashboard-row dashboard-row--stacked"
+            >
+              <div className="dashboard-row__content">
+                <p className="dashboard-attention-text">{item.description}</p>
+
+                <div className="dashboard-row__meta">
+                  <span className="attention-pill">{item.label}</span>
+                </div>
+              </div>
+
+              <Link to={item.actionTo} className="btn secondary">
+                {item.actionLabel}
+              </Link>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="dashboard-panel">
+        <div className="dashboard-panel__header">
           <h2>My Notifications</h2>
-          <Link to="/connections" className="btn link">
+          <Link to="/connections" className="btn secondary">
             Open Connections
           </Link>
         </div>
