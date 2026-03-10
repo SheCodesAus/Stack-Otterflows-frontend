@@ -44,6 +44,10 @@ Accountability Pods empowers individuals to achieve meaningful goals through sha
 Users join invite only groups centred on goals such as fitness, learning or career development. 
 Through goal setting, regular check ins and progress tracking, the platform strengthens accountability while fostering motivation, engagement and the celebration of milestones together.
 
+The **primary audience for Phase 1** is _individuals_ who want structured accountability while working toward personal goals.
+Users create goals and connect with a trusted verification buddy who confirms their progress.
+Future versions will extend the platform to support group accountability pods and collaborative goal tracking.
+
 ## Features
 
 > [!NOTE]  
@@ -51,9 +55,21 @@ Through goal setting, regular check ins and progress tracking, the platform stre
 
 ### Summary
 
-Accountability Pods by Stack Otterflow enables users to manage personal and collective goal tracking through structured groups. 
-Members submit check-ins for verification by designated "buddies" or pod members, ensuring data integrity and community support. 
-Administrative roles oversee pod settings and membership, while a centralised dashboard visualises individual and group progress through real-time streak tracking and milestone celebrations.
+Accountability Pods enables individuals to stay consistent with their personal goals through a structured and supportive accountability process. Users can create personal goals, connect with a trusted accountability buddy, and submit regular check-ins to record their progress. Each check-in is reviewed by the assigned buddy, who can approve or reject the submission to verify that meaningful progress has been made. By combining goal setting, progress tracking, and external verification, the platform encourages honesty, consistency, and sustained personal growth. For the Phase 1 release, the focus is on delivering this core individual accountability workflow in a clear, reliable, and user-friendly way. Future versions of Accountability Pods will build on this foundation by introducing collaborative pods, shared dashboards, and additional community engagement features to support group-based accountability and broader participation.
+
+### Specific MVP for Phase 1:
+- User registration
+- User login with token authentication
+- View current user profile
+- Update user profile
+- Create personal goals
+- View personal goals
+- View goal details and check-in history
+- Connect a verification buddy to a goal
+- Accept or decline buddy requests
+- Submit goal check-ins
+- Approve check-ins (by buddy)
+- Reject check-ins (by buddy)
 
 ### Users
 
@@ -124,6 +140,23 @@ Administrative roles oversee pod settings and membership, while a centralised da
 - **Calendar Sync:** Exporting pod deadlines and goal targets to external calendars like Google Calendar or Outlook.
 - **Slack/Discord Integration:** Webhooks that post a notification to a specific channel whenever a Group Pod hits a major milestone.
 - **Reaction Emojis/Assets:** Ability for buddies to react to check-in "sticky notes" with quick emojis to provide instant feedback.
+
+### Core User Flows
+
+#### Flow 1 – Account Setup
+
+1. Visitor registers a new account
+2. User logs in using token authentication
+3. User views and updates their profile
+
+#### Flow 2 – Individual Accountability Workflow
+
+1. User creates a personal goal
+2. User connects with a verification buddy
+3. Buddy accepts or declines the request
+4. User submits progress check-ins
+5. Buddy reviews and approves or rejects the check-in
+6. User views their check-in history and progress
 
 ## Technical Implementation
 
@@ -474,3 +507,4 @@ This is how to import it into our code:
 ### Thats All For Now
 [Last updated Sunday 8th March 2026]
 <img width="1500" height="500" alt="APSO (2)" src="https://github.com/user-attachments/assets/fd652484-84d9-4766-b3a4-059c20d2675d" />
+
