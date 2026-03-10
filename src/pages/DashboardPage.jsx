@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import getCurrentUser from "../api/getCurrentUser";
 import "./DashboardPage.css";
 
 const categoryMap = {
@@ -101,10 +103,28 @@ function getBuddyStatusClass(status) {
 }
 
 export default function DashboardPage() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error("Failed to load current user:", error);
+      }
+    }
+
+    loadUser();
+  }, []);
+
+  const welcomeName =
+    user?.display_name?.trim() || user?.username?.trim() || "";
+
   return (
     <section className="page-shell">
       <header className="dashboard-hero">
-        <h1>Welcome back</h1>
+        <h1>{welcomeName ? `Welcome back, ${welcomeName}` : "Welcome back"}</h1>
         <p>Here’s your accountability snapshot for this week.</p>
       </header>
 

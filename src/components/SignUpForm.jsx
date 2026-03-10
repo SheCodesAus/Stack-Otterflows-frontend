@@ -9,6 +9,7 @@ function SignUpForm() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    displayName: "",
     password: "",
     confirmPassword: "",
   });
@@ -40,7 +41,9 @@ function SignUpForm() {
       const signUpPayload = {
         username: formData.username,
         email: formData.email,
+        display_name: formData.displayName,
         password: formData.password,
+        password_confirm: formData.confirmPassword,
       };
 
       const signupRes = await fetch(buildUrl("auth/register/"), {
@@ -55,11 +58,15 @@ function SignUpForm() {
       const signupData = await signupRes.json().catch(() => ({}));
 
       if (!signupRes.ok) {
-        const firstError = Object.values(signupData)[0];
-        const message = Array.isArray(firstError)
-          ? firstError[0]
-          : signupData?.detail || "Sign up failed.";
-        throw new Error(message);
+        const firstEntry = Object.entries(signupData)[0];
+
+        if (firstEntry) {
+          const [field, messages] = firstEntry;
+          const message = Array.isArray(messages) ? messages[0] : messages;
+          throw new Error(`${field}: ${message}`);
+        }
+
+        throw new Error(signupData?.detail || "Sign up failed.");
       }
 
       const loginRes = await fetch(buildUrl("auth/token/"), {
@@ -113,6 +120,20 @@ function SignUpForm() {
           value={formData.email}
           onChange={handleChange}
           autoComplete="email"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="displayName">Display name</label>
+        <input
+          id="displayName"
+          name="displayName"
+          type="text"
+          value={formData.displayName}
+          onChange={handleChange}
+          autoComplete="nickname"
+          maxLength={80}
         />
       </div>
 
