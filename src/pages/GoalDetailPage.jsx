@@ -2,9 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
+import FormDropdown from "../components/FormDropdown";
 import "./GoalDetailPage.css";
 
 const DEFAULT_COMMENT_KIND = "COMMENT";
+
+const COMMENT_KIND_OPTIONS = [
+  { value: "COMMENT", label: "Comment" },
+  { value: "KUDOS", label: "Kudos" },
+  { value: "CLARIFY", label: "Clarify" },
+];
 
 const categoryMap = {
   HEALTH: { label: "Health", icon: "🫀" },
@@ -186,23 +193,14 @@ function formatCheckInValue(goal, checkin) {
   return `${value} ${unit}`;
 }
 
-function getAssignmentTone(status) {
-  switch (status) {
-    case "ACCEPTED":
-      return "approved";
-    case "PENDING":
-      return "pending";
-    case "DECLINED":
-      return "rejected";
-    default:
-      return "inactive";
-  }
-}
-
 function formatStatus(status) {
   if (!status) return "Unknown";
-  const normalised = status.toLowerCase();
-  return normalised.charAt(0).toUpperCase() + normalised.slice(1);
+
+  return status
+    .toString()
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatCommentKind(kind) {
@@ -217,6 +215,103 @@ function formatCommentKind(kind) {
       return "Clarify";
     default:
       return kind;
+  }
+}
+
+function getAssignmentTone(status) {
+  switch (status) {
+    case "ACCEPTED":
+      return "approved";
+    case "PENDING":
+      return "pending";
+    case "DECLINED":
+      return "rejected";
+    default:
+      return "inactive";
+  }
+}
+
+function getGoalStatusTone(status) {
+  switch (status) {
+    case "PLANNED":
+      return "planned";
+    case "ACTIVE":
+      return "active";
+    case "PAUSED":
+      return "paused";
+    case "COMPLETED":
+      return "completed";
+    case "ARCHIVED":
+      return "archived";
+    default:
+      return "inactive";
+  }
+}
+
+function formatDurationValue(minutes) {
+  const value = Number(minutes) || 0;
+
+  if (value >= 60 && value % 60 === 0) {
+    const hours = value / 60;
+    return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  }
+
+  return `${value} minute${value === 1 ? "" : "s"}`;
+}
+
+function getProgressMeasureText(goal, completedValue) {
+  const currentPeriodLabel = goal.period === "DAILY" ? "today" : "this week";
+
+  if (goal.status === "PLANNED") {
+    return goal.start_date
+      ? `This goal is planned and starts ${formatDate(goal.start_date)}.`
+      : "This goal is planned and has not started yet.";
+  }
+
+  if (goal.status === "PAUSED") {
+    return "This goal is currently paused.";
+  }
+
+  if (goal.status === "COMPLETED") {
+    return "This goal has been marked complete.";
+  }
+
+  if (goal.status === "ARCHIVED") {
+    return "This goal has been archived.";
+  }
+
+  if (goal.metric_type === "BINARY") {
+    return completedValue >= 1
+      ? `Completed ${currentPeriodLabel}.`
+      : `Not completed yet ${currentPeriodLabel}.`;
+  }
+
+  if (goal.metric_type === "DURATION") {
+    return `${formatDurationValue(completedValue)} of ${formatDurationValue(
+      goal.target_value
+    )} ${currentPeriodLabel}.`;
+  }
+
+  const unit = formatUnitLabel(goal.unit_label, goal.target_value);
+  return `${completedValue} of ${goal.target_value} ${unit} ${currentPeriodLabel}.`;
+}
+
+function getProgressSupportText(goal) {
+  if (goal.status === "PLANNED") return "It will become active once you’re ready to start.";
+  if (goal.status === "PAUSED") return "You can reactivate it later from Edit Goal.";
+  if (goal.status === "COMPLETED") return "You can still view the history and comments here.";
+  if (goal.status === "ARCHIVED") return "Archived goals stay here for reference.";
+  return `Target: ${formatTarget(goal)}`;
+}
+
+function getCommentPlaceholder(kind) {
+  switch (kind) {
+    case "KUDOS":
+      return "Add encouragement or celebrate a win...";
+    case "CLARIFY":
+      return "Ask a question or request more detail...";
+    default:
+      return "Add encouragement, context, or feedback...";
   }
 }
 
@@ -264,6 +359,7 @@ export default function GoalDetailPage() {
   );
   const [submittingCheckIn, setSubmittingCheckIn] = useState(false);
 
+  const [commentKind, setCommentKind] = useState(DEFAULT_COMMENT_KIND);
   const [commentBody, setCommentBody] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
@@ -441,10 +537,16 @@ export default function GoalDetailPage() {
   }, [connections, currentUser, goal, sortedAssignments]);
 
   const currentPeriodCompletedValue = useMemo(() => {
+    if (!goal) return 0;
+
+    if (goal.metric_type === "BINARY") {
+      return currentPeriodCheckins.some((checkin) => checkin.status !== "REJECTED") ? 1 : 0;
+    }
+
     return currentPeriodCheckins
       .filter((checkin) => checkin.status !== "REJECTED")
       .reduce((total, checkin) => total + (Number(checkin.value) || 0), 0);
-  }, [currentPeriodCheckins]);
+  }, [goal, currentPeriodCheckins]);
 
   const progressTarget = Number(goal?.target_value) || 1;
   const progressPercent = Math.max(
@@ -453,15 +555,6 @@ export default function GoalDetailPage() {
   );
 
   const progressHeading = goal?.period === "DAILY" ? "Progress Today" : "Progress This Week";
-
-  const progressStatusText = useMemo(() => {
-    if (!goal) return "";
-
-    if (progressPercent >= 100) return "Complete";
-    if (currentPeriodPending.length > 0) return "Awaiting verification";
-    if (currentPeriodCompletedValue > 0) return "In progress";
-    return "Not started yet";
-  }, [goal, progressPercent, currentPeriodPending.length, currentPeriodCompletedValue]);
 
   const ownerName = useMemo(() => {
     if (!goal) return "";
@@ -638,7 +731,7 @@ export default function GoalDetailPage() {
         method: "POST",
         body: JSON.stringify({
           goal: goal.id,
-          kind: DEFAULT_COMMENT_KIND,
+          kind: commentKind,
           body: commentBody.trim(),
         }),
       });
@@ -658,6 +751,7 @@ export default function GoalDetailPage() {
       }
 
       setCommentBody("");
+      setCommentKind(DEFAULT_COMMENT_KIND);
       setActionSuccess("Comment posted.");
       await refreshGoalDetail();
     } catch (err) {
@@ -722,8 +816,8 @@ export default function GoalDetailPage() {
         <div className="goal-detail-hero__main">
           <div className="goal-detail-hero__meta">
             <CategoryChip category={goal.category} />
-            <StatusPill tone={goal.is_active ? "active" : "inactive"}>
-              {goal.is_active ? "Active" : "Inactive"}
+            <StatusPill tone={getGoalStatusTone(goal.status)}>
+              {formatStatus(goal.status)}
             </StatusPill>
           </div>
 
@@ -735,9 +829,9 @@ export default function GoalDetailPage() {
 
           {isOwner ? (
             <div className="goal-detail-hero__actions">
-              <button type="button" className="btn secondary">
+              <Link to={`/goals/${goal.id}/edit`} className="btn secondary">
                 Edit Goal
-              </button>
+              </Link>
 
               <button
                 type="button"
@@ -871,10 +965,7 @@ export default function GoalDetailPage() {
 
             <div className="goal-progress">
               <div className="goal-progress__topline">
-                <strong>
-                  {currentPeriodCompletedValue} / {progressTarget}
-                </strong>
-                <span>{formatTarget(goal)}</span>
+                <strong>{getProgressMeasureText(goal, currentPeriodCompletedValue)}</strong>
               </div>
 
               <div
@@ -888,7 +979,7 @@ export default function GoalDetailPage() {
               </div>
 
               <div className="goal-progress__footer">
-                <span>{progressStatusText}</span>
+                <span>{getProgressSupportText(goal)}</span>
                 <strong>{progressPercent}%</strong>
               </div>
             </div>
@@ -1127,6 +1218,11 @@ export default function GoalDetailPage() {
               </div>
 
               <div className="goal-summary-row">
+                <span>Status</span>
+                <strong>{formatStatus(goal.status)}</strong>
+              </div>
+
+              <div className="goal-summary-row">
                 <span>How you’re tracking it</span>
                 <strong>{formatTrackingLabel(goal.metric_type)}</strong>
               </div>
@@ -1191,17 +1287,31 @@ export default function GoalDetailPage() {
         )}
 
         <form className="goal-comment-form" onSubmit={handleSubmitComment}>
-          <label htmlFor="goal-comment-body">Add a comment</label>
-          <textarea
-            id="goal-comment-body"
-            rows="4"
-            value={commentBody}
-            onChange={(event) => setCommentBody(event.target.value)}
-            placeholder="Add encouragement, context, or feedback..."
-          />
+          <div className="goal-inline-form__grid">
+            <div className="goal-inline-field goal-inline-field--full">
+              <label>Comment type</label>
+              <FormDropdown
+                value={commentKind}
+                options={COMMENT_KIND_OPTIONS}
+                onChange={setCommentKind}
+              />
+            </div>
+
+            <div className="goal-inline-field goal-inline-field--full">
+              <label htmlFor="goal-comment-body">Add a comment</label>
+              <textarea
+                id="goal-comment-body"
+                rows="4"
+                value={commentBody}
+                onChange={(event) => setCommentBody(event.target.value)}
+                placeholder={getCommentPlaceholder(commentKind)}
+              />
+            </div>
+          </div>
+
           <div className="goal-comment-form__actions">
             <button type="submit" className="btn primary" disabled={submittingComment}>
-              {submittingComment ? "Posting..." : "Post Comment"}
+              {submittingComment ? "Posting..." : `Post ${formatCommentKind(commentKind)}`}
             </button>
           </div>
         </form>

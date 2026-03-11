@@ -1,0 +1,391 @@
+.connections-page {
+  padding: 32px 16px 64px;
+  display: grid;
+  gap: 18px;
+}
+
+.connections-intro-panel,
+.connections-panel,
+.connections-state-card,
+.connections-stats-panel {
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+}
+
+.connections-intro-panel {
+  padding: 22px 24px;
+}
+
+.connections-intro {
+  max-width: 760px;
+}
+
+.connections-intro h1 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.connections-intro p {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+/* =========================
+   STATS
+   ========================= */
+
+.connections-stats-panel {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.connections-stat {
+  padding: 14px 16px;
+  border: 1px solid rgba(245, 232, 205, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.connections-stat__label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.connections-stat strong {
+  color: var(--text);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+/* =========================
+   PANELS
+   ========================= */
+
+.connections-panel {
+  padding: 18px;
+}
+
+.connections-panel__header {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(245, 232, 205, 0.1);
+}
+
+.connections-panel__header h2 {
+  margin: 0;
+  color: var(--section-heading3);
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
+.connections-panel__subtext {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+/* =========================
+   INVITE FORM
+   ========================= */
+
+.connections-invite-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.connections-field {
+  min-width: 0;
+}
+
+.connections-field__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.connections-field__input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.connections-field__input::placeholder {
+  color: rgba(253, 244, 225, 0.45);
+}
+
+.connections-field__input:focus {
+  outline: none;
+  border-color: rgba(169, 231, 191, 0.35);
+  box-shadow: 0 0 0 3px rgba(169, 231, 191, 0.08);
+}
+
+.connections-invite-form__button {
+  min-width: 144px;
+}
+
+.connections-feedback-card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(245, 232, 205, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.connections-feedback-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+/* =========================
+   LISTS
+   ========================= */
+
+.connections-list {
+  display: grid;
+  gap: 12px;
+}
+
+.connection-row-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(245, 232, 205, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.connection-row-card__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.connection-row-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.connection-row-card__identity {
+  min-width: 0;
+}
+
+.connection-row-card__identity h3 {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.connection-row-card__username {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.connection-row-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 12px;
+}
+
+.connection-row-card__metaItem {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.connection-row-card__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =========================
+   STATUS CHIPS
+   ========================= */
+
+.connection-status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.connection-status-chip--pending {
+  color: #f1d37a;
+  border: 1px solid rgba(241, 211, 122, 0.22);
+  background: rgba(241, 211, 122, 0.08);
+}
+
+.connection-status-chip--accepted {
+  color: #a9e7bf;
+  border: 1px solid rgba(169, 231, 191, 0.22);
+  background: rgba(169, 231, 191, 0.08);
+}
+
+.connection-status-chip--declined {
+  color: #f0a0af;
+  border: 1px solid rgba(240, 160, 175, 0.22);
+  background: rgba(240, 160, 175, 0.08);
+}
+
+.connection-status-chip--blocked,
+.connection-status-chip--neutral {
+  color: rgba(253, 244, 225, 0.72);
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* =========================
+   STATES
+   ========================= */
+
+.connections-state-card {
+  padding: 20px 22px;
+}
+
+.connections-state-card p {
+  margin: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.connections-state-card--error p {
+  color: #f3a6b3;
+}
+
+.connections-empty-card {
+  padding: 20px 4px 4px;
+}
+
+.connections-empty-card h3 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.2;
+}
+
+.connections-empty-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 900px) {
+  .connections-stats-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .connections-page {
+    padding: 24px 16px 44px;
+    gap: 16px;
+  }
+
+  .connections-intro-panel {
+    padding: 18px 16px;
+  }
+
+  .connections-panel,
+  .connections-stats-panel {
+    padding: 16px;
+  }
+
+  .connections-invite-form {
+    grid-template-columns: 1fr;
+  }
+
+  .connections-invite-form__button {
+    width: 100%;
+  }
+
+  .connection-row-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .connection-row-card__top {
+    display: grid;
+    gap: 10px;
+  }
+
+  .connection-row-card__actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .connection-row-card__actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .connections-intro h1 {
+    font-size: clamp(1.95rem, 8vw, 2.4rem);
+  }
+
+  .connections-intro p,
+  .connections-panel__subtext,
+  .connections-empty-card p {
+    font-size: 0.94rem;
+  }
+
+  .connection-row-card__identity h3 {
+    font-size: 1.05rem;
+  }
+}

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import FormDropdown from "../components/FormDropdown";
 import "./CreateGoalPage.css";
@@ -42,20 +42,33 @@ const durationUnitOptions = [
   { value: "hours", label: "Hours" },
 ];
 
-function getInitialGoalStatus(startDate) {
-  if (!startDate) return "ACTIVE";
+const statusOptions = [
+  { value: "PLANNED", label: "Planned" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "PAUSED", label: "Paused" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "ARCHIVED", label: "Archived" },
+];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+function getDurationPrefill(targetValue) {
+  const numeric = Number(targetValue) || 0;
 
-  const selected = new Date(startDate);
-  selected.setHours(0, 0, 0, 0);
+  if (numeric >= 60 && numeric % 60 === 0) {
+    return {
+      duration_unit: "hours",
+      target_value: numeric / 60,
+    };
+  }
 
-  return selected > today ? "PLANNED" : "ACTIVE";
+  return {
+    duration_unit: "minutes",
+    target_value: numeric || 20,
+  };
 }
 
-export default function CreateGoalPage() {
+export default function EditGoalPage() {
   const navigate = useNavigate();
+  const { goalId } = useParams();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -68,8 +81,10 @@ export default function CreateGoalPage() {
     duration_unit: "minutes",
     start_date: "",
     end_date: "",
+    status: "ACTIVE",
   });
 
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,8 +97,67 @@ export default function CreateGoalPage() {
     [formData.metric_type]
   );
 
+  const statusOption = useMemo(
+    () => statusOptions.find((option) => option.value === formData.status),
+    [formData.status]
+  );
+
   const periodWord = formData.period === "DAILY" ? "day" : "week";
   const durationWord = formData.duration_unit === "hours" ? "hours" : "minutes";
+
+  useEffect(() => {
+    async function loadGoal() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await authFetch(`goals/${goalId}/`);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data?.detail || "Failed to load goal.");
+        }
+
+        if (data.metric_type === "DURATION") {
+          const durationPrefill = getDurationPrefill(data.target_value);
+
+          setFormData({
+            title: data.title || "",
+            motivation: data.motivation || "",
+            category: data.category || "OTHER",
+            metric_type: data.metric_type || "COUNT",
+            period: data.period || "WEEKLY",
+            target_value: durationPrefill.target_value,
+            unit_label: "",
+            duration_unit: durationPrefill.duration_unit,
+            start_date: data.start_date || "",
+            end_date: data.end_date || "",
+            status: data.status || "ACTIVE",
+          });
+        } else {
+          setFormData({
+            title: data.title || "",
+            motivation: data.motivation || "",
+            category: data.category || "OTHER",
+            metric_type: data.metric_type || "COUNT",
+            period: data.period || "WEEKLY",
+            target_value: data.target_value || 1,
+            unit_label: data.unit_label || "",
+            duration_unit: "minutes",
+            start_date: data.start_date || "",
+            end_date: data.end_date || "",
+            status: data.status || "ACTIVE",
+          });
+        }
+      } catch (err) {
+        setError(err.message || "Failed to load goal.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGoal();
+  }, [goalId]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -109,7 +183,7 @@ export default function CreateGoalPage() {
 
         if (value === "COUNT") {
           next.target_value = 1;
-          next.unit_label = "";
+          next.unit_label = current.unit_label || "";
         }
 
         if (value === "DURATION") {
@@ -170,11 +244,11 @@ export default function CreateGoalPage() {
         unit_label: unitLabel,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
-        status: getInitialGoalStatus(formData.start_date),
+        status: formData.status,
       };
 
-      const response = await authFetch("goals/", {
-        method: "POST",
+      const response = await authFetch(`goals/${goalId}/`, {
+        method: "PATCH",
         body: JSON.stringify(payload),
       });
 
@@ -189,31 +263,51 @@ export default function CreateGoalPage() {
           throw new Error(`${field}: ${message}`);
         }
 
-        throw new Error(data?.detail || "Failed to create goal.");
+        throw new Error(data?.detail || "Failed to update goal.");
       }
 
-      navigate(`/goals/${data.id}`);
+      navigate(`/goals/${goalId}`);
     } catch (err) {
-      setError(err.message || "Failed to create goal.");
+      setError(err.message || "Failed to update goal.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <section className="page-shell create-goal-page">
+        <div className="create-goal-layout">
+          <section className="create-goal-intro">
+            <Link to={`/goals/${goalId}`} className="create-goal-backlink">
+              <span className="create-goal-backlink__arrow">←</span>
+              <span>Back to Goal</span>
+            </Link>
+
+            <header className="create-goal-header">
+              <h1>Edit Goal</h1>
+              <p>Loading goal details...</p>
+            </header>
+          </section>
+        </div>
+      </section>
+    );
   }
 
   return (
     <section className="page-shell create-goal-page">
       <div className="create-goal-layout">
         <section className="create-goal-intro">
-          <Link to="/goals" className="create-goal-backlink">
+          <Link to={`/goals/${goalId}`} className="create-goal-backlink">
             <span className="create-goal-backlink__arrow">←</span>
-            <span>Back to Goals</span>
+            <span>Back to Goal</span>
           </Link>
 
           <header className="create-goal-header">
-            <h1>Create Goal</h1>
+            <h1>Edit Goal</h1>
             <p>
-              Set up a personal goal you can track, check in on, and share with an
-              accountability buddy.
+              Update your goal settings, timing, and status without losing your
+              check-ins and progress history.
             </p>
           </header>
         </section>
@@ -223,7 +317,7 @@ export default function CreateGoalPage() {
             <section className="create-goal-section">
               <div className="create-goal-section__header">
                 <h2>What you’re aiming for</h2>
-                <p>Give your goal a clear title and a reason it matters to you.</p>
+                <p>Adjust the title and motivation if your focus has changed.</p>
               </div>
 
               <div className="create-goal-grid">
@@ -235,7 +329,6 @@ export default function CreateGoalPage() {
                     type="text"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder="e.g. Walk 8,000 steps every day"
                     required
                   />
                 </div>
@@ -259,7 +352,7 @@ export default function CreateGoalPage() {
             <section className="create-goal-section">
               <div className="create-goal-section__header">
                 <h2>How you’ll track it</h2>
-                <p>Choose the type of goal and how often you want to do it.</p>
+                <p>Update the structure of the goal if you need to refine it.</p>
               </div>
 
               <div className="create-goal-track-layout">
@@ -376,11 +469,8 @@ export default function CreateGoalPage() {
 
             <section className="create-goal-section">
               <div className="create-goal-section__header">
-                <h2>Optional dates</h2>
-                <p>
-                  Add a start and end date if this goal has a defined timeframe.
-                  Goals with a future start date will begin as planned automatically.
-                </p>
+                <h2>Dates and status</h2>
+                <p>Adjust timing and move the goal through its lifecycle here.</p>
               </div>
 
               <div className="create-goal-grid">
@@ -405,18 +495,33 @@ export default function CreateGoalPage() {
                     onChange={handleChange}
                   />
                 </div>
+
+                <div className="create-goal-field create-goal-field--full">
+                  <span className="create-goal-label">Goal status</span>
+                  <FormDropdown
+                    value={formData.status}
+                    options={statusOptions}
+                    onChange={(nextValue) => updateField("status", nextValue)}
+                  />
+                </div>
+
+                {statusOption ? (
+                  <p className="create-goal-hint create-goal-hint--context create-goal-field--full">
+                    Current status: {statusOption.label}
+                  </p>
+                ) : null}
               </div>
             </section>
 
             {error ? <p className="create-goal-error">{error}</p> : null}
 
             <div className="create-goal-actions">
-              <Link to="/goals" className="btn link">
+              <Link to={`/goals/${goalId}`} className="btn link">
                 Cancel
               </Link>
 
               <button type="submit" className="btn primary" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Goal"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>

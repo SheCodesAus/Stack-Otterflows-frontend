@@ -16,6 +16,7 @@ import PodsPage from "./pages/PodsPage";
 import PodDetailPage from "./pages/PodDetailPage";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import EditGoalPage from "./pages/EditGoalPage";
 
 function App() {
   return (
@@ -97,6 +98,14 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route
+  path="/goals/:goalId/edit"
+  element={
+    <RequireAuth>
+      <EditGoalPage />
+    </RequireAuth>
+  }
+/>
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

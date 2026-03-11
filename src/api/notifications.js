@@ -1,11 +1,5 @@
 import { authFetch } from "./auth-fetch";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
-const NOTIFICATIONS_LIST_URL = `${API_BASE_URL}/notifications/`;
-const NOTIFICATIONS_SUMMARY_URL = `${API_BASE_URL}/notifications/summary/`;
-const NOTIFICATIONS_MARK_ALL_READ_URL = `${API_BASE_URL}/notifications/read-all/`;
-
 async function parseJson(response) {
   const data = await response.json().catch(() => null);
 
@@ -21,58 +15,48 @@ async function parseJson(response) {
 }
 
 export async function fetchNotificationSummary() {
-  const response = await authFetch(NOTIFICATIONS_SUMMARY_URL);
+  const response = await authFetch("notifications/summary/");
   return parseJson(response);
 }
 
 export async function fetchNotifications({ tab = "all", limit = 8 } = {}) {
-  const url = new URL(NOTIFICATIONS_LIST_URL, window.location.origin);
-
-  url.searchParams.set("tab", tab);
+  const params = new URLSearchParams();
+  params.set("tab", tab);
 
   if (limit) {
-    url.searchParams.set("limit", String(limit));
+    params.set("limit", String(limit));
   }
 
-  const response = await authFetch(url.pathname + url.search);
+  const response = await authFetch(`notifications/?${params.toString()}`);
   return parseJson(response);
 }
 
 export async function markNotificationRead(notificationId) {
-  const response = await authFetch(
-    `${API_BASE_URL}/notifications/${notificationId}/read/`,
-    {
-      method: "POST",
-    }
-  );
+  const response = await authFetch(`notifications/${notificationId}/read/`, {
+    method: "POST",
+  });
 
   return parseJson(response);
 }
 
 export async function markNotificationUnread(notificationId) {
-  const response = await authFetch(
-    `${API_BASE_URL}/notifications/${notificationId}/unread/`,
-    {
-      method: "POST",
-    }
-  );
+  const response = await authFetch(`notifications/${notificationId}/unread/`, {
+    method: "POST",
+  });
 
   return parseJson(response);
 }
 
 export async function resolveNotification(notificationId) {
-  const response = await authFetch(
-    `${API_BASE_URL}/notifications/${notificationId}/resolve/`,
-    {
-      method: "POST",
-    }
-  );
+  const response = await authFetch(`notifications/${notificationId}/resolve/`, {
+    method: "POST",
+  });
 
   return parseJson(response);
 }
 
 export async function markAllNotificationsRead(tab = "all") {
-  const response = await authFetch(NOTIFICATIONS_MARK_ALL_READ_URL, {
+  const response = await authFetch("notifications/read-all/", {
     method: "POST",
     body: JSON.stringify({ tab }),
   });

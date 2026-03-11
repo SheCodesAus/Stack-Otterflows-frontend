@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
+import FormDropdown from "../components/FormDropdown";
 import "./GoalsPage.css";
 
 const categoryMap = {
@@ -12,6 +13,42 @@ const categoryMap = {
   WELLBEING: { label: "Wellbeing", icon: "🌿" },
   OTHER: { label: "Other", icon: "✨" },
 };
+
+const statusFilterOptions = [
+  { value: "ALL", label: "All statuses" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "PLANNED", label: "Planned" },
+  { value: "PAUSED", label: "Paused" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "ARCHIVED", label: "Archived" },
+];
+
+function formatStatus(status) {
+  if (!status) return "Unknown";
+
+  return status
+    .toString()
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getGoalStatusTone(status) {
+  switch (status) {
+    case "ACTIVE":
+      return "active";
+    case "PLANNED":
+      return "planned";
+    case "PAUSED":
+      return "paused";
+    case "COMPLETED":
+      return "completed";
+    case "ARCHIVED":
+      return "archived";
+    default:
+      return "inactive";
+  }
+}
 
 function CategoryChip({ category }) {
   const item = categoryMap[category] || categoryMap.OTHER;
@@ -26,14 +63,10 @@ function CategoryChip({ category }) {
   );
 }
 
-function StatusChip({ isActive }) {
+function StatusChip({ status }) {
   return (
-    <span
-      className={`goal-status-chip ${
-        isActive ? "goal-status-chip--active" : "goal-status-chip--inactive"
-      }`}
-    >
-      {isActive ? "Active" : "Inactive"}
+    <span className={`goal-status-chip goal-status-chip--${getGoalStatusTone(status)}`}>
+      {formatStatus(status)}
     </span>
   );
 }
@@ -76,7 +109,14 @@ function formatTrackingSummary(goal) {
   }
 
   if (goal.metric_type === "DURATION") {
-    return `${goal.target_value} min ${frequency}`;
+    const minutes = Number(goal.target_value) || 0;
+
+    if (minutes >= 60 && minutes % 60 === 0) {
+      const hours = minutes / 60;
+      return `${hours} ${hours === 1 ? "hour" : "hours"} ${frequency}`;
+    }
+
+    return `${minutes} min ${frequency}`;
   }
 
   if (goal.metric_type === "COUNT") {
@@ -126,7 +166,7 @@ function GoalRow({ goal }) {
       <div className="goal-row-card__main">
         <div className="goal-row-card__chips">
           <CategoryChip category={goal.category} />
-          <StatusChip isActive={goal.is_active} />
+          <StatusChip status={goal.status} />
         </div>
 
         <div className="goal-row-card__titleRow">
@@ -164,6 +204,7 @@ function GoalRow({ goal }) {
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -191,7 +232,13 @@ export default function GoalsPage() {
     fetchGoals();
   }, []);
 
+  const filteredGoals = useMemo(() => {
+    if (statusFilter === "ALL") return goals;
+    return goals.filter((goal) => goal.status === statusFilter);
+  }, [goals, statusFilter]);
+
   const hasGoals = !loading && !error && goals.length > 0;
+  const hasFilteredGoals = !loading && !error && filteredGoals.length > 0;
 
   return (
     <section className="page-shell goals-page">
@@ -236,17 +283,41 @@ export default function GoalsPage() {
       {hasGoals ? (
         <section className="goals-list-panel">
           <div className="goals-list-panel__header">
-            <h2>Your goals</h2>
+            <div>
+              <h2>Your goals</h2>
+              <p className="goals-list-panel__subtext">
+                Filter by status or open a goal to manage check-ins, buddies, and progress.
+              </p>
+            </div>
+
+            <div className="goals-list-panel__controls">
+              <div className="goals-filter">
+                <span className="goals-filter__label">Status</span>
+                <FormDropdown
+                  value={statusFilter}
+                  options={statusFilterOptions}
+                  onChange={setStatusFilter}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="goals-list">
-            {goals.map((goal) => (
-              <GoalRow key={goal.id} goal={goal} />
-            ))}
-          </div>
+          {hasFilteredGoals ? (
+            <div className="goals-list">
+              {filteredGoals.map((goal) => (
+                <GoalRow key={goal.id} goal={goal} />
+              ))}
+            </div>
+          ) : (
+            <div className="goals-state-card">
+              <p>No goals match that status yet.</p>
+            </div>
+          )}
 
           <div className="goals-list-panel__footer">
-            <div className="goals-list-panel__total">Goals: {goals.length}</div>
+            <div className="goals-list-panel__total">
+              Showing {filteredGoals.length} of {goals.length}
+            </div>
 
             <Link to="/goals/new" className="btn primary">
               Create Goal

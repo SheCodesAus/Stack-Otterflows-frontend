@@ -421,3 +421,35 @@
     font-size: 1.35rem;
   }
 }
+
+.dashboard-state {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.dashboard-state--error {
+  color: #ffd0d8;
+}
+
+.dashboard-submeta {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.dashboard-inline-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.dashboard-pending-title {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 1.04rem;
+  line-height: 1.3;
+  font-weight: 800;
+}
