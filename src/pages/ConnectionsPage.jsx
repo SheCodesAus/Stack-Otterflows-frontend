@@ -84,6 +84,26 @@ function EmptyState({ title, text }) {
   );
 }
 
+function SearchResultRow({ user, isInviting, onInvite }) {
+  return (
+    <article className="connection-search-result">
+      <div className="connection-search-result__main">
+        <h3>{user.display_name || user.username}</h3>
+        <p>@{user.username}</p>
+      </div>
+
+      <button
+        type="button"
+        className="btn primary"
+        onClick={() => onInvite(user)}
+        disabled={isInviting}
+      >
+        {isInviting ? "Sending..." : "Invite"}
+      </button>
+    </article>
+  );
+}
+
 function ConnectionRow({
   connection,
   currentUserId,
@@ -107,7 +127,6 @@ function ConnectionRow({
         <div className="connection-row-card__top">
           <div className="connection-row-card__identity">
             <h3>{otherUser.name}</h3>
-
             {otherUser.username ? (
               <p className="connection-row-card__username">@{otherUser.username}</p>
             ) : null}
@@ -126,15 +145,11 @@ function ConnectionRow({
           ) : null}
 
           {createdAtLabel ? (
-            <span className="connection-row-card__metaItem">
-              Sent {createdAtLabel}
-            </span>
+            <span className="connection-row-card__metaItem">Sent {createdAtLabel}</span>
           ) : null}
 
           {respondedAtLabel ? (
-            <span className="connection-row-card__metaItem">
-              Responded {respondedAtLabel}
-            </span>
+            <span className="connection-row-card__metaItem">Responded {respondedAtLabel}</span>
           ) : null}
         </div>
       </div>
@@ -167,19 +182,18 @@ function ConnectionRow({
 export default function ConnectionsPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [connections, setConnections] = useState([]);
-  const [inviteeId, setInviteeId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submittingInvite, setSubmittingInvite] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [submittingInviteId, setSubmittingInviteId] = useState(null);
   const [actingConnectionId, setActingConnectionId] = useState(null);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
 
   async function loadConnections(existingUser = null, showLoader = true) {
     try {
-      if (showLoader) {
-        setLoading(true);
-      }
-
+      if (showLoader) setLoading(true);
       setError("");
 
       if (existingUser) {
@@ -210,15 +224,46 @@ export default function ConnectionsPage() {
     } catch (err) {
       setError(err.message || "Something went wrong while loading connections.");
     } finally {
-      if (showLoader) {
-        setLoading(false);
-      }
+      if (showLoader) setLoading(false);
     }
   }
 
   useEffect(() => {
     loadConnections();
   }, []);
+
+  useEffect(() => {
+    async function runSearch() {
+      const trimmed = searchQuery.trim();
+
+      if (trimmed.length < 2) {
+        setSearchResults([]);
+        setSearching(false);
+        return;
+      }
+
+      try {
+        setSearching(true);
+
+        const response = await authFetch(`users/search/?q=${encodeURIComponent(trimmed)}`);
+        const data = await response.json().catch(() => []);
+
+        if (!response.ok) {
+          throw new Error(data?.detail || `Failed to search users (${response.status})`);
+        }
+
+        setSearchResults(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setFeedback(err.message || "Could not search users.");
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }
+
+    const timeoutId = window.setTimeout(runSearch, 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const incomingInvites = useMemo(() => {
     if (!currentUser) return [];
@@ -247,31 +292,15 @@ export default function ConnectionsPage() {
     );
   }, [connections]);
 
-  async function handleInviteSubmit(event) {
-    event.preventDefault();
-
-    const cleanedInviteeId = inviteeId.trim();
-
-    if (!cleanedInviteeId) {
-      setFeedback("Please enter a user ID.");
-      return;
-    }
-
-    const numericInviteeId = Number(cleanedInviteeId);
-
-    if (!Number.isInteger(numericInviteeId) || numericInviteeId <= 0) {
-      setFeedback("User ID must be a whole number.");
-      return;
-    }
-
+  async function handleInvite(user) {
     try {
-      setSubmittingInvite(true);
+      setSubmittingInviteId(user.id);
       setFeedback("");
 
       const response = await authFetch("connections/", {
         method: "POST",
         body: JSON.stringify({
-          invitee: numericInviteeId,
+          invitee: user.id,
         }),
       });
 
@@ -282,12 +311,13 @@ export default function ConnectionsPage() {
       }
 
       setConnections((prev) => [data, ...prev]);
-      setInviteeId("");
-      setFeedback("Connection invite sent.");
+      setSearchResults((prev) => prev.filter((item) => item.id !== user.id));
+      setSearchQuery("");
+      setFeedback(`Invite sent to ${user.display_name || user.username}.`);
     } catch (err) {
       setFeedback(err.message || "Could not send the connection invite.");
     } finally {
-      setSubmittingInvite(false);
+      setSubmittingInviteId(null);
     }
   }
 
@@ -345,8 +375,8 @@ export default function ConnectionsPage() {
         <div className="connections-intro">
           <h1>Connections</h1>
           <p>
-            Manage your accountability network here. Accept invites, keep track of
-            sent requests, and build your circle for goals and pods.
+            Search for people, send invites, and manage the accountability
+            relationships that power goals and pods.
           </p>
         </div>
       </section>
@@ -373,37 +403,55 @@ export default function ConnectionsPage() {
           <div>
             <h2>Invite a connection</h2>
             <p className="connections-panel__subtext">
-              For now, invites are sent using a user ID while search is still being built.
+              Start typing a name or username to find someone and send an invite.
             </p>
           </div>
         </div>
 
-        <form className="connections-invite-form" onSubmit={handleInviteSubmit}>
-          <div className="connections-field">
-            <label htmlFor="inviteeId" className="connections-field__label">
-              User ID
-            </label>
+        <div className="connections-search-shell">
+          <label htmlFor="connectionSearch" className="connections-field__label">
+            Search users
+          </label>
 
-            <input
-              id="inviteeId"
-              name="inviteeId"
-              type="text"
-              inputMode="numeric"
-              placeholder="Enter a user ID"
-              value={inviteeId}
-              onChange={(event) => setInviteeId(event.target.value)}
-              className="connections-field__input"
-            />
-          </div>
+          <input
+            id="connectionSearch"
+            type="text"
+            className="connections-field__input"
+            placeholder="Search by username, name, or email"
+            value={searchQuery}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setFeedback("");
+            }}
+          />
 
-          <button
-            type="submit"
-            className="btn primary connections-invite-form__button"
-            disabled={submittingInvite}
-          >
-            {submittingInvite ? "Sending..." : "Send Invite"}
-          </button>
-        </form>
+          {searchQuery.trim().length >= 2 ? (
+            <div className="connections-search-results">
+              {searching ? (
+                <p className="connections-search-results__state">Searching...</p>
+              ) : searchResults.length > 0 ? (
+                <div className="connections-search-results__list">
+                  {searchResults.map((user) => (
+                    <SearchResultRow
+                      key={user.id}
+                      user={user}
+                      isInviting={submittingInviteId === user.id}
+                      onInvite={handleInvite}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="connections-search-results__state">
+                  No matching users found.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="connections-search-hint">
+              Enter at least 2 characters to search.
+            </p>
+          )}
+        </div>
 
         {feedback ? (
           <div className="connections-feedback-card">
@@ -431,7 +479,7 @@ export default function ConnectionsPage() {
               <div>
                 <h2>Incoming invites</h2>
                 <p className="connections-panel__subtext">
-                  Accept the people you want in your accountability orbit.
+                  Accept the people you want in your accountability circle.
                 </p>
               </div>
             </div>
@@ -483,7 +531,7 @@ export default function ConnectionsPage() {
             ) : (
               <EmptyState
                 title="No sent invites"
-                text="Send an invite when you’re ready to add a buddy."
+                text="Search for someone above when you’re ready to invite a buddy."
               />
             )}
           </section>
@@ -493,7 +541,7 @@ export default function ConnectionsPage() {
               <div>
                 <h2>Accepted connections</h2>
                 <p className="connections-panel__subtext">
-                  These are the people you can build accountability with.
+                  These are the people you can work with across goals and pods.
                 </p>
               </div>
             </div>
@@ -514,7 +562,7 @@ export default function ConnectionsPage() {
             ) : (
               <EmptyState
                 title="No accepted connections yet"
-                text="Once an invite is accepted, your connection will appear here."
+                text="Once someone accepts, they’ll appear here."
               />
             )}
           </section>
