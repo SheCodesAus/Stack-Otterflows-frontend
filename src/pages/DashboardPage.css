@@ -280,20 +280,6 @@
 }
 
 /* =========================
-   NOTIFICATIONS
-   ========================= */
-
-.dashboard-notifications {
-  margin: 0;
-  padding-left: 20px;
-  color: var(--text);
-}
-
-.dashboard-notifications li + li {
-  margin-top: 10px;
-}
-
-/* =========================
    MOBILE
    ========================= */
 
@@ -331,7 +317,7 @@
   }
 
   .dashboard-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dashboard-panel h2 {
@@ -421,5 +407,17 @@
 
   .dashboard-panel__header .btn.secondary {
     width: 100%;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-stat {
+    padding: 12px 12px;
+  }
+
+  .dashboard-stat strong {
+    font-size: 1.35rem;
   }
 }

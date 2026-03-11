@@ -1,7 +1,6 @@
-// src/components/NavBar/MobileMenu.jsx
 import { Link } from "react-router-dom";
 
-function MobileMenu({ open, tokenExists, onClose, onLogout }) {
+function MobileMenu({ open, tokenExists, createTarget, onClose }) {
   return (
     <div id="mobile-nav" className={`mobile-panel ${open ? "open" : ""}`}>
       <nav className="mobile-links" aria-label="Mobile navigation">
@@ -49,16 +48,8 @@ function MobileMenu({ open, tokenExists, onClose, onLogout }) {
               How It Works
             </Link>
 
-            <button
-              type="button"
-              className="mobile-link mobile-link--button"
-              onClick={onLogout}
-            >
-              Logout
-            </button>
-
             <Link
-              to="/dashboard"
+              to={createTarget}
               className="mobile-link mobile-cta"
               onClick={onClose}
             >

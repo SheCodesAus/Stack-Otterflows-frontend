@@ -18,21 +18,27 @@ const goals = [
     id: 1,
     title: "Don’t eat bread or pasta, eat vegetables instead",
     category: "HEALTH",
+    status: "ACTIVE",
     latestCheckInStatus: "Approved",
+    buddyName: "Becky",
     buddyStatus: "Accepted",
   },
   {
     id: 2,
     title: "Work out at the gym four days a week and go for runs on the weekend",
     category: "FITNESS",
+    status: "ACTIVE",
     latestCheckInStatus: "Pending",
-    buddyStatus: "Accepted",
+    buddyName: "Becky",
+    buddyStatus: "Pending",
   },
   {
     id: 3,
     title: "Finish the React tutorial this week",
     category: "EDUCATION",
+    status: "PLANNED",
     latestCheckInStatus: "No check-ins yet",
+    buddyName: "",
     buddyStatus: "Not assigned",
   },
 ];
@@ -59,17 +65,16 @@ const pods = [
     id: 1,
     name: "Pod Study Playwright",
     summary: "Finish the tutorial and complete every exercise.",
+    status: "ACTIVE",
+    goalCount: 2,
   },
   {
     id: 2,
     name: "Pod The Mindful Time",
     summary: "Meditate for 20 minutes every day.",
+    status: "ACTIVE",
+    goalCount: 2,
   },
-];
-
-const notifications = [
-  "You have 1 pending buddy approval.",
-  "You have 1 pending pod check-in.",
 ];
 
 function getCheckInStatusClass(status) {
@@ -102,6 +107,13 @@ function getBuddyStatusClass(status) {
   }
 }
 
+function formatBuddyLabel(name, status) {
+  if (!name && status === "Not assigned") return "Not assigned";
+  if (!name) return status;
+  if (status === "Pending") return `Buddy ${name} (Pending)`;
+  return `Buddy ${name}`;
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
 
@@ -121,6 +133,14 @@ export default function DashboardPage() {
   const welcomeName =
     user?.display_name?.trim() || user?.username?.trim() || "";
 
+  const activeGoalsCount = goals.filter((goal) => goal.status === "ACTIVE").length;
+  const pendingCheckInsCount = attentionItems.length;
+  const activePodsCount = pods.filter((pod) => pod.status === "ACTIVE").length;
+  const activePodGoalsCount = pods.reduce(
+    (total, pod) => total + (pod.goalCount || 0),
+    0
+  );
+
   return (
     <section className="page-shell dashboard-page">
       <section className="dashboard-intro-panel">
@@ -130,7 +150,10 @@ export default function DashboardPage() {
         </header>
       </section>
 
-      <section className="dashboard-panel dashboard-panel--quick-actions">
+      <section
+        id="dashboard-quick-actions"
+        className="dashboard-panel dashboard-panel--quick-actions"
+      >
         <div className="dashboard-panel__header">
           <h2>Quick Actions</h2>
         </div>
@@ -156,22 +179,22 @@ export default function DashboardPage() {
         <div className="dashboard-stats">
           <div className="dashboard-stat">
             <span className="dashboard-stat__label">Active goals</span>
-            <strong>3</strong>
+            <strong>{activeGoalsCount}</strong>
           </div>
 
           <div className="dashboard-stat">
             <span className="dashboard-stat__label">Pending check-ins</span>
-            <strong>1</strong>
+            <strong>{pendingCheckInsCount}</strong>
           </div>
 
           <div className="dashboard-stat">
             <span className="dashboard-stat__label">Active pods</span>
-            <strong>2</strong>
+            <strong>{activePodsCount}</strong>
           </div>
 
           <div className="dashboard-stat">
             <span className="dashboard-stat__label">Active pod goals</span>
-            <strong>4</strong>
+            <strong>{activePodGoalsCount}</strong>
           </div>
         </div>
       </section>
@@ -180,7 +203,7 @@ export default function DashboardPage() {
         <div className="dashboard-panel__header">
           <h2>My Goals</h2>
           <Link to="/goals" className="btn link">
-            View all
+            View all ({goals.length})
           </Link>
         </div>
 
@@ -221,7 +244,7 @@ export default function DashboardPage() {
                           goal.buddyStatus
                         )}`}
                       >
-                        {goal.buddyStatus}
+                        {formatBuddyLabel(goal.buddyName, goal.buddyStatus)}
                       </span>
                     </span>
                   </div>
@@ -240,7 +263,7 @@ export default function DashboardPage() {
         <div className="dashboard-panel__header">
           <h2>My Pods</h2>
           <Link to="/pods" className="btn link">
-            View all
+            View all ({pods.length})
           </Link>
         </div>
 
@@ -288,21 +311,6 @@ export default function DashboardPage() {
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="dashboard-panel">
-        <div className="dashboard-panel__header">
-          <h2>My Notifications</h2>
-          <Link to="/connections" className="btn secondary">
-            Open Connections
-          </Link>
-        </div>
-
-        <ul className="dashboard-notifications">
-          {notifications.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
       </section>
     </section>
   );

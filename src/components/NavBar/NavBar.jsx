@@ -1,6 +1,7 @@
-// src/components/NavBar/NavBar.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import getCurrentUser from "../../api/getCurrentUser";
+import { fetchNotificationSummary } from "../../api/notifications";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
 import "./NavBar.css";
 
@@ -8,35 +9,147 @@ import bfLogo from "../../assets/react.svg";
 
 import NavLinks from "./NavLinks";
 import MobileMenu from "./MobileMenu";
+import NotificationMenu from "./NotificationMenu";
 
 function NavBar() {
   const navigate = useNavigate();
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationSummary, setNotificationSummary] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const profileMenuRef = useRef(null);
+  const notificationsMenuRef = useRef(null);
 
   const { tokenExists, clearToken } = useAuthStatus();
 
-  const createTarget = tokenExists ? "/dashboard" : "/register";
+  const createTarget = tokenExists
+    ? "/dashboard#dashboard-quick-actions"
+    : "/register";
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 900) setMenuOpen(false);
+      if (window.innerWidth >= 1081) {
+        setMenuOpen(false);
+      }
     };
 
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const closeMenu = () => setMenuOpen(false);
+  useEffect(() => {
+    async function loadUser() {
+      if (!tokenExists) {
+        setUser(null);
+        return;
+      }
 
-  const toggleMenu = () => {
-    setMenuOpen((v) => !v);
-  };
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error("Failed to load current user:", error);
+      }
+    }
 
-  const handleLogout = () => {
+    loadUser();
+  }, [tokenExists]);
+
+useEffect(() => {
+  async function loadNotificationSummary() {
+    if (!tokenExists) {
+      setNotificationSummary(null);
+      return;
+    }
+
+    try {
+      const summary = await fetchNotificationSummary();
+      setNotificationSummary(summary);
+    } catch (error) {
+      console.error("Failed to load notification summary:", error);
+    }
+  }
+
+  loadNotificationSummary();
+}, [tokenExists]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setProfileMenuOpen(false);
+      }
+
+      if (
+        notificationsMenuRef.current &&
+        !notificationsMenuRef.current.contains(event.target)
+      ) {
+        setNotificationsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  function toggleMenu() {
+    setMenuOpen((value) => !value);
+  }
+
+  function handleLogout() {
     clearToken();
+    setProfileMenuOpen(false);
+    setNotificationsOpen(false);
     closeMenu();
     navigate("/");
-  };
+  }
+
+  function handleProfileToggle() {
+    setNotificationsOpen(false);
+    setProfileMenuOpen((value) => !value);
+  }
+
+  function handleNotificationsToggle() {
+    setProfileMenuOpen(false);
+    setNotificationsOpen((value) => !value);
+  }
+
+  function handleProfileOpen() {
+    setProfileMenuOpen(false);
+    closeMenu();
+    navigate("/profile");
+  }
+
+  const displayName =
+    user?.display_name?.trim() ||
+    user?.username?.trim() ||
+    user?.email?.trim() ||
+    "User";
+
+  const userInitials = useMemo(() => {
+    const parts = displayName.split(/\s+/).filter(Boolean);
+
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return parts
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+  }, [displayName]);
+
+  const unreadCount = notificationSummary?.unread_count || 0;
 
   return (
     <header className="navbar">
@@ -54,16 +167,41 @@ function NavBar() {
           />
         </Link>
 
-        <NavLinks tokenExists={tokenExists} onLogout={handleLogout} />
+        <NavLinks
+          tokenExists={tokenExists}
+          createTarget={createTarget}
+          onClose={closeMenu}
+        />
 
         <div className="navbar-actions">
-          <Link
-            to={createTarget}
-            className="cta-btn btn primary"
-            onClick={closeMenu}
-          >
-            Create
-          </Link>
+          {tokenExists && (
+            <div className="nav-popover" ref={notificationsMenuRef}>
+              <button
+                type="button"
+                className="icon-btn bell-btn"
+                aria-label="Open notifications"
+                aria-expanded={notificationsOpen}
+                onClick={handleNotificationsToggle}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="icon">
+                  <path d="M12 22a2.46 2.46 0 0 0 2.45-2h-4.9A2.46 2.46 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1Z" />
+                </svg>
+
+                {unreadCount > 0 && (
+                  <span className="icon-badge">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {notificationsOpen && (
+                <NotificationMenu
+                  open={notificationsOpen}
+                  onClose={() => setNotificationsOpen(false)}
+                />
+              )}
+            </div>
+          )}
 
           {!tokenExists ? (
             <Link
@@ -77,16 +215,37 @@ function NavBar() {
               </svg>
             </Link>
           ) : (
-            <button
-              type="button"
-              className="icon-btn login-icon"
-              aria-label="Logout"
-              onClick={handleLogout}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="icon">
-                <path d="M10 17v-2h4v-2h-4v-2l-3 3 3 3Zm9-12H9a2 2 0 0 0-2 2v3h2V7h10v10H9v-3H7v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z" />
-              </svg>
-            </button>
+            <div className="user-menu" ref={profileMenuRef}>
+              <button
+                type="button"
+                className="avatar-btn"
+                aria-label="Open account menu"
+                aria-expanded={profileMenuOpen}
+                onClick={handleProfileToggle}
+              >
+                {userInitials}
+              </button>
+
+              {profileMenuOpen && (
+                <div className="nav-dropdown nav-dropdown--profile">
+                  <button
+                    type="button"
+                    className="nav-dropdown__button"
+                    onClick={handleProfileOpen}
+                  >
+                    Profile
+                  </button>
+
+                  <button
+                    type="button"
+                    className="nav-dropdown__button"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           <button
@@ -111,8 +270,8 @@ function NavBar() {
       <MobileMenu
         open={menuOpen}
         tokenExists={tokenExists}
+        createTarget={createTarget}
         onClose={closeMenu}
-        onLogout={handleLogout}
       />
     </header>
   );

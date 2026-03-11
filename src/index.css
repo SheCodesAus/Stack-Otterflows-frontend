@@ -61,7 +61,15 @@ a {
 }
 
 /* Make sure overlays sit behind content */
-.page > * {
+.page {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Keep page content above decorative overlays,
+   but do NOT force the navbar into the same layer */
+.app-main,
+.page > footer {
   position: relative;
   z-index: 1;
 }
