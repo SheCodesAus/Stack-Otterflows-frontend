@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="bf-footer__brandRow">
           <span className="bf-footer__title">Stack Otterflows</span>
           <span className="bf-footer__dash" aria-hidden="true">-</span>
-          <span className="bf-footer__tagline">Accessibility Pods are cool!</span>
+          <span className="bf-footer__tagline">Accountability Pods are cool!</span>
         </div>
 
         {/* Links + icons as one cohesive strip */}
