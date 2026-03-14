@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import getCurrentUser from "../../api/getCurrentUser";
 import { fetchNotificationSummary } from "../../api/notifications";
@@ -29,6 +29,17 @@ function NavBar() {
     ? "/dashboard#dashboard-quick-actions"
     : "/register";
 
+  const refreshNotificationSummary = useCallback(async () => {
+    if (!tokenExists) return;
+
+    try {
+      const summary = await fetchNotificationSummary();
+      setNotificationSummary(summary);
+    } catch (error) {
+      console.error("Failed to load notification summary:", error);
+    }
+  }, [tokenExists]);
+
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth >= 1081) {
@@ -58,23 +69,51 @@ function NavBar() {
     loadUser();
   }, [tokenExists]);
 
-useEffect(() => {
-  async function loadNotificationSummary() {
-    if (!tokenExists) {
-      setNotificationSummary(null);
-      return;
+  useEffect(() => {
+    if (!tokenExists) return;
+
+    let cancelled = false;
+
+    async function fetchSummary() {
+      try {
+        const summary = await fetchNotificationSummary();
+        if (!cancelled) {
+          setNotificationSummary(summary);
+        }
+      } catch (error) {
+        console.error("Failed to load notification summary:", error);
+      }
     }
 
-    try {
-      const summary = await fetchNotificationSummary();
-      setNotificationSummary(summary);
-    } catch (error) {
-      console.error("Failed to load notification summary:", error);
-    }
-  }
+    fetchSummary();
 
-  loadNotificationSummary();
-}, [tokenExists]);
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenExists]);
+
+  useEffect(() => {
+    if (!tokenExists || !notificationsOpen) return;
+
+    let cancelled = false;
+
+    async function fetchSummary() {
+      try {
+        const summary = await fetchNotificationSummary();
+        if (!cancelled) {
+          setNotificationSummary(summary);
+        }
+      } catch (error) {
+        console.error("Failed to load notification summary:", error);
+      }
+    }
+
+    fetchSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenExists, notificationsOpen]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -107,6 +146,8 @@ useEffect(() => {
 
   function handleLogout() {
     clearToken();
+    setNotificationSummary(null);
+    setUser(null);
     setProfileMenuOpen(false);
     setNotificationsOpen(false);
     closeMenu();
@@ -149,7 +190,9 @@ useEffect(() => {
       .toUpperCase();
   }, [displayName]);
 
-  const unreadCount = notificationSummary?.unread_count || 0;
+  const badgeCount =
+    (notificationSummary?.unread_count || 0) +
+    (notificationSummary?.needs_review_count || 0);
 
   return (
     <header className="navbar">
@@ -187,9 +230,9 @@ useEffect(() => {
                   <path d="M12 22a2.46 2.46 0 0 0 2.45-2h-4.9A2.46 2.46 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1Z" />
                 </svg>
 
-                {unreadCount > 0 && (
+                {badgeCount > 0 && (
                   <span className="icon-badge">
-                    {unreadCount > 99 ? "99+" : unreadCount}
+                    {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 )}
               </button>
@@ -198,6 +241,7 @@ useEffect(() => {
                 <NotificationMenu
                   open={notificationsOpen}
                   onClose={() => setNotificationsOpen(false)}
+                  onSummaryRefresh={refreshNotificationSummary}
                 />
               )}
             </div>

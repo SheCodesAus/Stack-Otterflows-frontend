@@ -342,6 +342,7 @@ export default function GoalDetailPage() {
   const [connections, setConnections] = useState([]);
 
   const [loading, setLoading] = useState(true);
+  const [loadingConnections, setLoadingConnections] = useState(false);
   const [error, setError] = useState("");
 
   const [actionError, setActionError] = useState("");
@@ -420,6 +421,9 @@ export default function GoalDetailPage() {
       if (!isOwner || !showAssignForm) return;
 
       try {
+        setLoadingConnections(true);
+        setActionError("");
+
         const response = await authFetch("connections/");
         const data = await response.json().catch(() => []);
 
@@ -430,6 +434,8 @@ export default function GoalDetailPage() {
         setConnections(Array.isArray(data) ? data : []);
       } catch (err) {
         setActionError(err.message || "Failed to load connections.");
+      } finally {
+        setLoadingConnections(false);
       }
     }
 
@@ -465,6 +471,21 @@ export default function GoalDetailPage() {
       return bDate - aDate;
     });
   }, [goal]);
+
+  const acceptedAssignments = useMemo(
+    () => sortedAssignments.filter((assignment) => assignment.consent_status === "ACCEPTED"),
+    [sortedAssignments]
+  );
+
+  const pendingAssignments = useMemo(
+    () => sortedAssignments.filter((assignment) => assignment.consent_status === "PENDING"),
+    [sortedAssignments]
+  );
+
+  const declinedAssignments = useMemo(
+    () => sortedAssignments.filter((assignment) => assignment.consent_status === "DECLINED"),
+    [sortedAssignments]
+  );
 
   const currentPeriodCheckins = useMemo(() => {
     if (!goal) return [];
@@ -504,10 +525,8 @@ export default function GoalDetailPage() {
   );
 
   const acceptedBuddyIds = useMemo(() => {
-    return sortedAssignments
-      .filter((assignment) => assignment.consent_status === "ACCEPTED")
-      .map((assignment) => assignment.buddy);
-  }, [sortedAssignments]);
+    return acceptedAssignments.map((assignment) => assignment.buddy);
+  }, [acceptedAssignments]);
 
   const canVerifyCheckins = useMemo(() => {
     if (!currentUser) return false;
@@ -533,7 +552,8 @@ export default function GoalDetailPage() {
             "Unknown user",
         };
       })
-      .filter((person) => person.id !== currentUser.id && !assignedBuddyIds.has(person.id));
+      .filter((person) => person.id !== currentUser.id && !assignedBuddyIds.has(person.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [connections, currentUser, goal, sortedAssignments]);
 
   const currentPeriodCompletedValue = useMemo(() => {
@@ -561,6 +581,38 @@ export default function GoalDetailPage() {
     return goal.owner_display_name || goal.owner_username || "Unknown";
   }, [goal]);
 
+  const hasAcceptedBuddy = acceptedAssignments.length > 0;
+  const hasPendingBuddy = pendingAssignments.length > 0;
+
+  const assignButtonLabel = hasAcceptedBuddy
+    ? "Assign Another Buddy"
+    : hasPendingBuddy
+    ? "Invite Another Buddy"
+    : "Assign Buddy";
+
+  function clearActionMessages() {
+    setActionError("");
+    setActionSuccess("");
+  }
+
+  function toggleCheckInForm() {
+    clearActionMessages();
+    setShowCheckInForm((current) => !current);
+    setShowAssignForm(false);
+  }
+
+  function toggleAssignForm() {
+    clearActionMessages();
+    setShowAssignForm((current) => {
+      const next = !current;
+      if (!next) {
+        setSelectedBuddyId("");
+      }
+      return next;
+    });
+    setShowCheckInForm(false);
+  }
+
   async function refreshGoalDetail() {
     const response = await authFetch(`goals/${goalId}/`);
     const data = await response.json().catch(() => ({}));
@@ -574,8 +626,7 @@ export default function GoalDetailPage() {
 
   async function handleApprove(checkinId) {
     try {
-      setActionError("");
-      setActionSuccess("");
+      clearActionMessages();
 
       const response = await authFetch(`checkins/${checkinId}/approve/`, {
         method: "POST",
@@ -600,8 +651,7 @@ export default function GoalDetailPage() {
     if (reason === null) return;
 
     try {
-      setActionError("");
-      setActionSuccess("");
+      clearActionMessages();
 
       const response = await authFetch(`checkins/${checkinId}/reject/`, {
         method: "POST",
@@ -631,8 +681,7 @@ export default function GoalDetailPage() {
 
     try {
       setAssigningBuddy(true);
-      setActionError("");
-      setActionSuccess("");
+      clearActionMessages();
 
       const response = await authFetch("goal-assignments/", {
         method: "POST",
@@ -676,8 +725,7 @@ export default function GoalDetailPage() {
 
     try {
       setSubmittingCheckIn(true);
-      setActionError("");
-      setActionSuccess("");
+      clearActionMessages();
 
       const response = await authFetch("checkins/", {
         method: "POST",
@@ -724,8 +772,7 @@ export default function GoalDetailPage() {
 
     try {
       setSubmittingComment(true);
-      setActionError("");
-      setActionSuccess("");
+      clearActionMessages();
 
       const response = await authFetch("comments/", {
         method: "POST",
@@ -836,10 +883,7 @@ export default function GoalDetailPage() {
               <button
                 type="button"
                 className="btn primary"
-                onClick={() => {
-                  setShowCheckInForm((current) => !current);
-                  setShowAssignForm(false);
-                }}
+                onClick={toggleCheckInForm}
               >
                 {showCheckInForm ? "Close Check-In" : "Add Check-In"}
               </button>
@@ -912,47 +956,6 @@ export default function GoalDetailPage() {
               </button>
             </div>
           </form>
-        </section>
-      ) : null}
-
-      {showAssignForm ? (
-        <section className="goal-card">
-          <div className="goal-card__header">
-            <h2>Assign Buddy</h2>
-          </div>
-
-          {availableConnections.length ? (
-            <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
-              <div className="goal-inline-form__grid">
-                <div className="goal-inline-field goal-inline-field--full">
-                  <label htmlFor="buddy-select">Choose a buddy</label>
-                  <select
-                    id="buddy-select"
-                    value={selectedBuddyId}
-                    onChange={(event) => setSelectedBuddyId(event.target.value)}
-                    required
-                  >
-                    <option value="">Select a connection</option>
-                    {availableConnections.map((person) => (
-                      <option key={person.id} value={person.id}>
-                        {person.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="goal-inline-form__actions">
-                <button type="submit" className="btn primary" disabled={assigningBuddy}>
-                  {assigningBuddy ? "Sending..." : "Send Buddy Invite"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <p className="goal-empty-text">
-              No available accepted connections to assign right now.
-            </p>
-          )}
         </section>
       ) : null}
 
@@ -1133,7 +1136,7 @@ export default function GoalDetailPage() {
         <aside className="goal-detail-side">
           <article className="goal-card">
             <div className="goal-card__header">
-              <h2>Accountability</h2>
+              <h2>Accountability Buddy</h2>
             </div>
 
             {sortedAssignments.length ? (
@@ -1161,19 +1164,86 @@ export default function GoalDetailPage() {
               </p>
             )}
 
+            {hasAcceptedBuddy ? (
+              <p className="goal-side-note">
+                Accepted buddies can review pending check-ins for this goal.
+              </p>
+            ) : null}
+
+            {!hasAcceptedBuddy && hasPendingBuddy ? (
+              <p className="goal-side-note">
+                You have a buddy request waiting for a response.
+              </p>
+            ) : null}
+
+            {!hasAcceptedBuddy && !hasPendingBuddy && declinedAssignments.length > 0 ? (
+              <p className="goal-side-note">
+                A previous buddy request was declined. You can choose someone else.
+              </p>
+            ) : null}
+
             {isOwner ? (
-              <div className="goal-card__footerAction">
-                <button
-                  type="button"
-                  className="btn primary"
-                  onClick={() => {
-                    setShowAssignForm((current) => !current);
-                    setShowCheckInForm(false);
-                  }}
-                >
-                  {showAssignForm ? "Close Assign Buddy" : "Assign Buddy"}
-                </button>
-              </div>
+              <>
+                <div className="goal-card__footerAction">
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={toggleAssignForm}
+                  >
+                    {showAssignForm ? "Close Assign Buddy" : assignButtonLabel}
+                  </button>
+                </div>
+
+                {showAssignForm ? (
+                  <>
+                    {loadingConnections ? (
+                      <p className="goal-empty-text">Loading accepted connections...</p>
+                    ) : availableConnections.length ? (
+                      <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
+                        <div className="goal-inline-form__grid">
+                          <div className="goal-inline-field goal-inline-field--full">
+                            <label htmlFor="buddy-select">Choose a buddy</label>
+                            <select
+                              id="buddy-select"
+                              value={selectedBuddyId}
+                              onChange={(event) => setSelectedBuddyId(event.target.value)}
+                              required
+                            >
+                              <option value="">Select a connection</option>
+                              {availableConnections.map((person) => (
+                                <option key={person.id} value={person.id}>
+                                  {person.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="goal-inline-form__actions">
+                          <button
+                            type="submit"
+                            className="btn primary"
+                            disabled={assigningBuddy}
+                          >
+                            {assigningBuddy ? "Sending..." : "Send Buddy Invite"}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <p className="goal-empty-text">
+                          No available accepted connections to assign right now.
+                        </p>
+                        <div className="goal-card__footerAction">
+                          <Link to="/connections" className="btn secondary">
+                            Manage Connections
+                          </Link>
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : null}
+              </>
             ) : null}
           </article>
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../../api/auth-fetch";
 import {
   fetchNotificationSummary,
   fetchNotifications,
@@ -28,7 +29,19 @@ function getNotificationTone(notification) {
   return "default";
 }
 
-export default function NotificationMenu({ open, onClose }) {
+function isGoalAssignmentRequest(notification) {
+  return notification.notif_type === "GOAL_ASSIGNMENT_REQUEST";
+}
+
+function getAssignmentId(notification) {
+  return (
+    notification.assignment_id ||
+    notification.payload_json?.assignment_id ||
+    null
+  );
+}
+
+export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("needs_review");
@@ -91,15 +104,25 @@ export default function NotificationMenu({ open, onClose }) {
     loadNotifications(activeTab);
   }, [open, activeTab]);
 
-  async function refreshCurrentView() {
-    await Promise.all([loadSummary(), loadNotifications(activeTab)]);
+async function refreshCurrentView() {
+  await Promise.all([loadSummary(), loadNotifications(activeTab)]);
+  if (onSummaryRefresh) {
+    await onSummaryRefresh();
   }
+}
 
   async function handleNotificationClick(notification) {
     try {
+      setError("");
+
       if (!notification.is_read) {
         setBusyId(notification.id);
         await markNotificationRead(notification.id);
+      }
+
+      if (isGoalAssignmentRequest(notification)) {
+        await refreshCurrentView();
+        return;
       }
 
       onClose();
@@ -137,10 +160,54 @@ export default function NotificationMenu({ open, onClose }) {
     }
   }
 
-  const hasUnread = useMemo(
-    () => (summary?.unread_count || 0) > 0,
-    [summary]
-  );
+  async function handleAssignmentResponse(event, notification, action) {
+    event.stopPropagation();
+
+    const assignmentId = getAssignmentId(notification);
+
+    if (!assignmentId) {
+      setError("This buddy request is missing an assignment ID.");
+      return;
+    }
+
+    try {
+      setBusyId(notification.id);
+      setError("");
+
+      const endpoint =
+        action === "accept"
+          ? `goal-assignments/${assignmentId}/accept/`
+          : `goal-assignments/${assignmentId}/decline/`;
+
+      const response = await authFetch(endpoint, {
+        method: "POST",
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+            `Could not ${action === "accept" ? "accept" : "decline"} buddy request.`
+        );
+      }
+
+      if (!notification.is_read) {
+        await markNotificationRead(notification.id);
+      }
+
+      await refreshCurrentView();
+    } catch (err) {
+      setError(
+        err.message ||
+          `Could not ${action === "accept" ? "accept" : "decline"} buddy request.`
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const hasUnread = useMemo(() => (summary?.unread_count || 0) > 0, [summary]);
 
   return (
     <div className="nav-dropdown nav-dropdown--notifications">
@@ -150,7 +217,9 @@ export default function NotificationMenu({ open, onClose }) {
           <p className="nav-dropdown__subtext">
             {loadingSummary
               ? "Loading summary..."
-              : `${summary?.unread_count || 0} unread • ${summary?.needs_review_count || 0} needs review`}
+              : `${summary?.unread_count || 0} unread • ${
+                  summary?.needs_review_count || 0
+                } needs review`}
           </p>
         </div>
 
@@ -193,59 +262,119 @@ export default function NotificationMenu({ open, onClose }) {
         ) : (
           notifications.map((notification) => {
             const tone = getNotificationTone(notification);
+            const isBuddyRequest = isGoalAssignmentRequest(notification);
+            const assignmentId = getAssignmentId(notification);
+            const showBuddyActions =
+  isBuddyRequest && !!assignmentId && !notification.is_resolved;
+            const isBusy = busyId === notification.id;
 
             return (
-              <button
+              <article
                 key={notification.id}
-                type="button"
                 className={`notification-card notification-card--${tone}`}
-                onClick={() => handleNotificationClick(notification)}
-                disabled={busyId === notification.id}
               >
-                <div className="notification-card__top">
-                  <div className="notification-card__heading">
-                    {!notification.is_read && (
-                      <span
-                        className="notification-card__unread-dot"
-                        aria-hidden="true"
-                      />
-                    )}
+                {isBuddyRequest ? (
+                  <div className="notification-card__main notification-card__main--static">
+                    <div className="notification-card__top">
+                      <div className="notification-card__heading">
+                        {!notification.is_read && (
+                          <span
+                            className="notification-card__unread-dot"
+                            aria-hidden="true"
+                          />
+                        )}
 
-                    <span className="notification-card__title">
-                      {notification.title}
-                    </span>
+                        <span className="notification-card__title">
+                          {notification.title}
+                        </span>
+                      </div>
+
+                      {notification.is_needs_review && (
+                        <span className="notification-card__pill">Needs review</span>
+                      )}
+                    </div>
+
+                    <p className="notification-card__message">{notification.message}</p>
+
+                    <p className="notification-card__helper">
+  {showBuddyActions
+    ? "Choose Accept or Decline below."
+    : notification.is_resolved
+    ? "This buddy request has already been handled."
+    : "This buddy request is missing its assignment link."}
+</p>
                   </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="notification-card__main"
+                    onClick={() => handleNotificationClick(notification)}
+                    disabled={isBusy}
+                  >
+                    <div className="notification-card__top">
+                      <div className="notification-card__heading">
+                        {!notification.is_read && (
+                          <span
+                            className="notification-card__unread-dot"
+                            aria-hidden="true"
+                          />
+                        )}
 
-                  {notification.is_needs_review && (
-                    <span className="notification-card__pill">
-                      Needs review
-                    </span>
-                  )}
-                </div>
+                        <span className="notification-card__title">
+                          {notification.title}
+                        </span>
+                      </div>
 
-                <p className="notification-card__message">
-                  {notification.message}
-                </p>
+                      {notification.is_needs_review && (
+                        <span className="notification-card__pill">Needs review</span>
+                      )}
+                    </div>
+
+                    <p className="notification-card__message">{notification.message}</p>
+                  </button>
+                )}
 
                 <div className="notification-card__footer">
                   <span className="notification-card__type">
                     {notification.type_label}
                   </span>
 
-                  {notification.is_action_required && !notification.is_resolved && (
+                  {showBuddyActions ? (
+                    <div className="notification-card__actions">
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        onClick={(event) =>
+                          handleAssignmentResponse(event, notification, "decline")
+                        }
+                        disabled={isBusy}
+                      >
+                        {isBusy ? "Working..." : "Decline"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={(event) =>
+                          handleAssignmentResponse(event, notification, "accept")
+                        }
+                        disabled={isBusy}
+                      >
+                        {isBusy ? "Working..." : "Accept"}
+                      </button>
+                    </div>
+                  ) : notification.is_action_required && !notification.is_resolved ? (
                     <button
                       type="button"
                       className="notification-card__resolve"
-                      onClick={(event) =>
-                        handleResolve(event, notification.id)
-                      }
-                      disabled={busyId === notification.id}
+                      onClick={(event) => handleResolve(event, notification.id)}
+                      disabled={isBusy}
                     >
                       Resolve
                     </button>
-                  )}
+                  ) : null}
                 </div>
-              </button>
+              </article>
             );
           })
         )}
