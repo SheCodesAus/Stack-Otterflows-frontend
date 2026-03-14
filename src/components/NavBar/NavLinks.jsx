@@ -35,6 +35,10 @@ function NavLinks({ tokenExists, createTarget, onClose }) {
             Pods
           </Link>
 
+          <Link to="/connections" className="navbar-link" onClick={onClose}>
+            Connections
+          </Link>
+
           <Link to="/how-it-works" className="navbar-link" onClick={onClose}>
             How It Works
           </Link>

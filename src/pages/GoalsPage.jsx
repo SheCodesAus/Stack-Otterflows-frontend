@@ -202,26 +202,111 @@ function GoalRow({ goal }) {
   );
 }
 
+function SupportedGoalRow({ goal }) {
+  const ownerName =
+    goal.owner_display_name || goal.owner_username || "Unknown owner";
+
+  return (
+    <article className="goal-row-card">
+      <div className="goal-row-card__main">
+        <div className="goal-row-card__chips">
+          <CategoryChip category={goal.category} />
+          <StatusChip status={goal.status} />
+        </div>
+
+        <div className="goal-row-card__titleRow">
+          <div className="goal-row-card__content">
+            <h2 className="goal-row-card__title">{goal.title}</h2>
+
+            <p className="goal-row-card__motivation">
+              Supporting {ownerName}
+            </p>
+          </div>
+
+          <Link
+            to={`/goals/${goal.id}`}
+            className="btn secondary goal-row-card__desktopAction"
+          >
+            View Goal
+          </Link>
+        </div>
+
+        <div className="goal-row-card__summary">{formatGoalSummary(goal)}</div>
+
+        <div className="goal-row-card__mobileAction">
+          <Link to={`/goals/${goal.id}`} className="btn secondary">
+            View Goal
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
+  const [supportedGoals, setSupportedGoals] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchGoals() {
+    async function fetchPageData() {
       try {
         setLoading(true);
         setError("");
 
-        const response = await authFetch("goals/");
-        const data = await response.json().catch(() => ({}));
+        const [goalsResponse, assignmentsResponse] = await Promise.all([
+          authFetch("goals/"),
+          authFetch("goal-assignments/"),
+        ]);
 
-        if (!response.ok) {
-          throw new Error(data?.detail || `Failed to load goals (${response.status})`);
+        const goalsData = await goalsResponse.json().catch(() => ({}));
+        const assignmentsData = await assignmentsResponse.json().catch(() => ({}));
+
+        if (!goalsResponse.ok) {
+          throw new Error(
+            goalsData?.detail || `Failed to load goals (${goalsResponse.status})`
+          );
         }
 
-        setGoals(Array.isArray(data) ? data : []);
+        if (!assignmentsResponse.ok) {
+          throw new Error(
+            assignmentsData?.detail ||
+              `Failed to load supported goals (${assignmentsResponse.status})`
+          );
+        }
+
+        const ownGoals = Array.isArray(goalsData) ? goalsData : [];
+        const assignments = Array.isArray(assignmentsData) ? assignmentsData : [];
+
+        setGoals(ownGoals);
+
+        const acceptedAssignments = assignments.filter(
+          (assignment) => assignment.consent_status === "ACCEPTED"
+        );
+
+        if (acceptedAssignments.length === 0) {
+          setSupportedGoals([]);
+          return;
+        }
+
+        const uniqueGoalIds = [...new Set(acceptedAssignments.map((item) => item.goal))];
+
+        const supportedGoalResponses = await Promise.all(
+          uniqueGoalIds.map(async (goalId) => {
+            const response = await authFetch(`goals/${goalId}/`);
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+              return null;
+            }
+
+            return data;
+          })
+        );
+
+        setSupportedGoals(supportedGoalResponses.filter(Boolean));
       } catch (err) {
         setError(err.message || "Something went wrong while loading goals.");
       } finally {
@@ -229,7 +314,7 @@ export default function GoalsPage() {
       }
     }
 
-    fetchGoals();
+    fetchPageData();
   }, []);
 
   const filteredGoals = useMemo(() => {
@@ -239,6 +324,7 @@ export default function GoalsPage() {
 
   const hasGoals = !loading && !error && goals.length > 0;
   const hasFilteredGoals = !loading && !error && filteredGoals.length > 0;
+  const hasSupportedGoals = !loading && !error && supportedGoals.length > 0;
 
   return (
     <section className="page-shell goals-page">
@@ -246,8 +332,8 @@ export default function GoalsPage() {
         <div className="goals-intro">
           <h1>Goals</h1>
           <p>
-            Your personal goals live here. Pick one to view details, track
-            progress, or check in.
+            Manage your own goals and open the goals you’re supporting as an
+            accountability buddy.
           </p>
         </div>
       </div>
@@ -264,7 +350,7 @@ export default function GoalsPage() {
         </div>
       ) : null}
 
-      {!loading && !error && goals.length === 0 ? (
+      {!loading && !error && goals.length === 0 && supportedGoals.length === 0 ? (
         <div className="goals-empty-card">
           <div className="goals-empty-card__icon" aria-hidden="true">
             🎯
@@ -284,9 +370,10 @@ export default function GoalsPage() {
         <section className="goals-list-panel">
           <div className="goals-list-panel__header">
             <div>
-              <h2>Your goals</h2>
+              <h2>My Goals</h2>
               <p className="goals-list-panel__subtext">
-                Filter by status or open a goal to manage check-ins, buddies, and progress.
+                Filter by status or open a goal to manage check-ins, buddies, and
+                progress.
               </p>
             </div>
 
@@ -323,6 +410,57 @@ export default function GoalsPage() {
               Create Goal
             </Link>
           </div>
+        </section>
+      ) : null}
+
+      {!loading && !error && !hasGoals && supportedGoals.length > 0 ? (
+        <section className="goals-list-panel">
+          <div className="goals-list-panel__header">
+            <div>
+              <h2>My Goals</h2>
+              <p className="goals-list-panel__subtext">
+                You haven’t created any personal goals yet.
+              </p>
+            </div>
+          </div>
+
+          <div className="goals-state-card">
+            <p>Create your first goal when you’re ready.</p>
+          </div>
+
+          <div className="goals-list-panel__footer">
+            <div className="goals-list-panel__total">Showing 0 of 0</div>
+
+            <Link to="/goals/new" className="btn primary">
+              Create Goal
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
+      {!loading && !error ? (
+        <section className="goals-list-panel">
+          <div className="goals-list-panel__header">
+            <div>
+              <h2>Goals I’m Supporting</h2>
+              <p className="goals-list-panel__subtext">
+                Open these goals to review check-ins and support the people who
+                assigned you as their buddy.
+              </p>
+            </div>
+          </div>
+
+          {hasSupportedGoals ? (
+            <div className="goals-list">
+              {supportedGoals.map((goal) => (
+                <SupportedGoalRow key={goal.id} goal={goal} />
+              ))}
+            </div>
+          ) : (
+            <div className="goals-state-card">
+              <p>You’re not supporting any accepted goals yet.</p>
+            </div>
+          )}
         </section>
       ) : null}
     </section>

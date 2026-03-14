@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
-import { fetchNotificationSummary, fetchNotifications } from "../api/notifications";
+import { fetchNotifications } from "../api/notifications";
 import {
   fetchGoals,
   fetchGoalDetail,
@@ -19,11 +20,6 @@ const categoryMap = {
   WELLBEING: { label: "Wellbeing", icon: "🌿" },
   OTHER: { label: "Other", icon: "✨" },
 };
-
-const CHECKIN_NOTIFICATION_TYPES = new Set([
-  "CHECKIN_SUBMITTED",
-  "POD_CHECKIN_SUBMITTED",
-]);
 
 function humanizeEnum(value) {
   if (!value) return "";
@@ -65,10 +61,40 @@ function getBuddyStatusClass(status) {
 }
 
 function formatBuddyLabel(name, status) {
-  if (!name && status === "Not assigned") return "Not assigned";
-  if (!name) return status;
-  if (status === "Pending") return `Buddy ${name} (Pending)`;
-  return `Buddy ${name}`;
+  if (status === "Not assigned") return "Not assigned";
+  if (status === "Pending") return name ? `Pending • ${name}` : "Pending";
+  if (status === "Declined") return name ? `Declined • ${name}` : "Declined";
+  if (status === "Accepted") return name || "Accepted";
+  return name || humanizeEnum(status) || "Pending";
+}
+
+function formatReviewCount(count) {
+  if (count === 1) return "1 pending review";
+  return `${count} pending reviews`;
+}
+
+function isCheckInReviewNotification(notification) {
+  const type = notification?.notif_type || "";
+  const typeLabel = (notification?.type_label || "").toLowerCase();
+  const title = (notification?.title || "").toLowerCase();
+
+  return (
+    type.includes("CHECKIN") ||
+    typeLabel.includes("check-in") ||
+    typeLabel.includes("check in") ||
+    title.includes("check-in") ||
+    title.includes("check in")
+  );
+}
+
+function getReviewFallbackUrl(notification) {
+  if (notification?.target_url) return notification.target_url;
+
+  if ((notification?.notif_type || "").startsWith("POD_")) {
+    return "/pods";
+  }
+
+  return "/goals";
 }
 
 function normaliseGoal(baseGoal, detailGoal) {
@@ -100,6 +126,24 @@ function normaliseGoal(baseGoal, detailGoal) {
   };
 }
 
+function normaliseSupportedGoal(detailGoal) {
+  const latestCheckInStatus = detailGoal?.latest_checkin_status
+    ? humanizeEnum(detailGoal.latest_checkin_status)
+    : "No check-ins yet";
+
+  return {
+    id: detailGoal.id,
+    title: detailGoal.title,
+    category: detailGoal.category,
+    motivation: detailGoal.motivation,
+    ownerName:
+      detailGoal.owner_display_name ||
+      detailGoal.owner_username ||
+      "Unknown",
+    latestCheckInStatus,
+  };
+}
+
 function normalisePod(basePod, detailPod) {
   const podGoals = detailPod?.pod_goals || [];
   const activePodGoalsCount = podGoals.filter(
@@ -116,23 +160,26 @@ function normalisePod(basePod, detailPod) {
   };
 }
 
-function normalisePendingCheckIn(notification) {
+function normaliseReviewItem(notification) {
+  const label = notification?.type_label || "Pending review";
+
   return {
     id: notification.id,
-    label: notification.is_needs_review ? "Needs review" : notification.type_label,
-    title: notification.title,
-    description: notification.message,
-    actionLabel: "Review Check-in",
-    actionTo: notification.target_url || "/dashboard",
+    label,
+    title: notification.title || "Review required",
+    description:
+      notification.message || "A check-in is waiting for your review.",
+    actionLabel: "Open Review",
+    actionTo: getReviewFallbackUrl(notification),
   };
 }
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [goals, setGoals] = useState([]);
+  const [supportedGoals, setSupportedGoals] = useState([]);
   const [pods, setPods] = useState([]);
-  const [pendingCheckIns, setPendingCheckIns] = useState([]);
-  const [notificationSummary, setNotificationSummary] = useState(null);
+  const [reviewItems, setReviewItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -146,18 +193,26 @@ export default function DashboardPage() {
           currentUser,
           goalsList,
           podsList,
-          summary,
           needsReviewNotifications,
+          assignmentsResponse,
         ] = await Promise.all([
           getCurrentUser(),
           fetchGoals(),
           fetchPods(),
-          fetchNotificationSummary(),
           fetchNotifications({ tab: "needs_review", limit: 50 }),
+          authFetch("goal-assignments/"),
         ]);
 
+        const assignmentsData = await assignmentsResponse.json().catch(() => ({}));
+
+        if (!assignmentsResponse.ok) {
+          throw new Error(
+            assignmentsData?.detail ||
+              `Failed to load supported goals (${assignmentsResponse.status})`
+          );
+        }
+
         setUser(currentUser);
-        setNotificationSummary(summary);
 
         const goalDetails = await Promise.all(
           goalsList.map((goal) => fetchGoalDetail(goal.id))
@@ -177,15 +232,41 @@ export default function DashboardPage() {
           return normalisePod(pod, matchingDetail);
         });
 
-        const realPendingCheckIns = needsReviewNotifications
-          .filter((notification) =>
-            CHECKIN_NOTIFICATION_TYPES.has(notification.notif_type)
-          )
-          .map(normalisePendingCheckIn);
+        const reviewNotifications = Array.isArray(needsReviewNotifications)
+          ? needsReviewNotifications
+          : [];
+
+        const realReviewItems = reviewNotifications
+          .filter(isCheckInReviewNotification)
+          .map(normaliseReviewItem);
+
+        const assignments = Array.isArray(assignmentsData) ? assignmentsData : [];
+        const acceptedAssignments = assignments.filter(
+          (assignment) => assignment.consent_status === "ACCEPTED"
+        );
+
+        const uniqueSupportedGoalIds = [
+          ...new Set(acceptedAssignments.map((assignment) => assignment.goal)),
+        ];
+
+        const supportedGoalDetails = await Promise.all(
+          uniqueSupportedGoalIds.map(async (goalId) => {
+            try {
+              return await fetchGoalDetail(goalId);
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        const realSupportedGoals = supportedGoalDetails
+          .filter(Boolean)
+          .map(normaliseSupportedGoal);
 
         setGoals(realGoals);
+        setSupportedGoals(realSupportedGoals);
         setPods(realPods);
-        setPendingCheckIns(realPendingCheckIns);
+        setReviewItems(realReviewItems);
       } catch (err) {
         console.error("Failed to load dashboard:", err);
         setError(err.message || "Could not load your dashboard.");
@@ -201,24 +282,26 @@ export default function DashboardPage() {
     user?.display_name?.trim() || user?.username?.trim() || "";
 
   const visibleGoals = useMemo(() => goals.slice(0, 3), [goals]);
+  const visibleSupportedGoals = useMemo(
+    () => supportedGoals.slice(0, 3),
+    [supportedGoals]
+  );
   const visiblePods = useMemo(() => pods.slice(0, 3), [pods]);
+  const visibleReviewItems = useMemo(() => reviewItems.slice(0, 3), [reviewItems]);
 
   const activeGoalsCount = useMemo(
     () => goals.filter((goal) => goal.status === "ACTIVE").length,
     [goals]
   );
 
-  const pendingCheckInsCount = pendingCheckIns.length;
+  const reviewCount = reviewItems.length;
 
   const activePodsCount = useMemo(
     () => pods.filter((pod) => pod.isActive).length,
     [pods]
   );
 
-  const activePodGoalsCount = useMemo(
-    () => pods.reduce((total, pod) => total + pod.activePodGoalsCount, 0),
-    [pods]
-  );
+  const supportedGoalsCount = supportedGoals.length;
 
   return (
     <section className="page-shell dashboard-page">
@@ -268,18 +351,18 @@ export default function DashboardPage() {
           </div>
 
           <div className="dashboard-stat">
-            <span className="dashboard-stat__label">Pending check-ins</span>
-            <strong>{loading ? "…" : pendingCheckInsCount}</strong>
+            <span className="dashboard-stat__label">Needs my review</span>
+            <strong>{loading ? "…" : reviewCount}</strong>
+          </div>
+
+          <div className="dashboard-stat">
+            <span className="dashboard-stat__label">Goals I’m supporting</span>
+            <strong>{loading ? "…" : supportedGoalsCount}</strong>
           </div>
 
           <div className="dashboard-stat">
             <span className="dashboard-stat__label">Active pods</span>
             <strong>{loading ? "…" : activePodsCount}</strong>
-          </div>
-
-          <div className="dashboard-stat">
-            <span className="dashboard-stat__label">Active pod goals</span>
-            <strong>{loading ? "…" : activePodGoalsCount}</strong>
           </div>
         </div>
       </section>
@@ -295,7 +378,9 @@ export default function DashboardPage() {
         {loading ? (
           <p className="dashboard-state">Loading goals...</p>
         ) : visibleGoals.length === 0 ? (
-          <p className="dashboard-state">No goals yet. Create your first goal to get started.</p>
+          <p className="dashboard-state">
+            No goals yet. Create your first goal to get started.
+          </p>
         ) : (
           <div className="dashboard-list">
             {visibleGoals.map((goal) => {
@@ -352,6 +437,70 @@ export default function DashboardPage() {
 
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
+          <h2>Goals I’m Supporting</h2>
+          <Link to="/goals" className="btn link">
+            View all ({supportedGoals.length})
+          </Link>
+        </div>
+
+        {loading ? (
+          <p className="dashboard-state">Loading supported goals...</p>
+        ) : visibleSupportedGoals.length === 0 ? (
+          <p className="dashboard-state">
+            You’re not supporting any accepted goals yet.
+          </p>
+        ) : (
+          <div className="dashboard-list">
+            {visibleSupportedGoals.map((goal) => {
+              const category = categoryMap[goal.category] || categoryMap.OTHER;
+
+              return (
+                <article key={goal.id} className="dashboard-row">
+                  <div className="dashboard-row__content">
+                    <h3 className="dashboard-goal-title">{goal.title}</h3>
+
+                    <div className="dashboard-goal-meta">
+                      <span className="dashboard-goal-meta__item dashboard-goal-meta__item--category">
+                        <span className="dashboard-goal-meta__icon" aria-hidden="true">
+                          {category.icon}
+                        </span>
+                        <span>{category.label}</span>
+                      </span>
+
+                      <span className="dashboard-goal-meta__item">
+                        <span className="dashboard-goal-meta__label">Owner:</span>
+                        <span className="dashboard-goal-meta__value">
+                          {goal.ownerName}
+                        </span>
+                      </span>
+
+                      <span className="dashboard-goal-meta__item">
+                        <span className="dashboard-goal-meta__label">
+                          Latest check-in:
+                        </span>
+                        <span
+                          className={`dashboard-goal-meta__value ${getCheckInStatusClass(
+                            goal.latestCheckInStatus
+                          )}`}
+                        >
+                          {goal.latestCheckInStatus}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link to={`/goals/${goal.id}`} className="btn secondary">
+                    View Goal
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="dashboard-panel">
+        <div className="dashboard-panel__header">
           <h2>My Pods</h2>
           <Link to="/pods" className="btn link">
             View all ({pods.length})
@@ -361,7 +510,9 @@ export default function DashboardPage() {
         {loading ? (
           <p className="dashboard-state">Loading pods...</p>
         ) : visiblePods.length === 0 ? (
-          <p className="dashboard-state">No pods yet. Create one when you’re ready.</p>
+          <p className="dashboard-state">
+            No pods yet. Create one when you’re ready.
+          </p>
         ) : (
           <div className="dashboard-list">
             {visiblePods.map((pod) => (
@@ -373,7 +524,8 @@ export default function DashboardPage() {
                   <h3>{pod.name}</h3>
                   <p>{pod.summary}</p>
                   <p className="dashboard-submeta">
-                    {pod.activePodGoalsCount} active pod goal{pod.activePodGoalsCount === 1 ? "" : "s"}
+                    {pod.activePodGoalsCount} active pod goal
+                    {pod.activePodGoalsCount === 1 ? "" : "s"}
                     {" • "}
                     {pod.memberCount} member{pod.memberCount === 1 ? "" : "s"}
                   </p>
@@ -390,21 +542,23 @@ export default function DashboardPage() {
 
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
-          <h2>Pending Check-ins</h2>
-          {!loading && notificationSummary ? (
+          <h2>Needs My Review</h2>
+          {!loading && (
             <span className="dashboard-inline-note">
-              {notificationSummary.needs_review_count} needs review overall
+              {formatReviewCount(reviewCount)}
             </span>
-          ) : null}
+          )}
         </div>
 
         {loading ? (
-          <p className="dashboard-state">Loading pending check-ins...</p>
-        ) : pendingCheckIns.length === 0 ? (
-          <p className="dashboard-state">No pending check-ins right now.</p>
+          <p className="dashboard-state">Loading review items...</p>
+        ) : visibleReviewItems.length === 0 ? (
+          <p className="dashboard-state">
+            No check-ins are waiting for your review right now.
+          </p>
         ) : (
           <div className="dashboard-list">
-            {pendingCheckIns.map((item) => (
+            {visibleReviewItems.map((item) => (
               <article
                 key={item.id}
                 className="dashboard-row dashboard-row--stacked"

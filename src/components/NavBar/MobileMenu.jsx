@@ -44,6 +44,10 @@ function MobileMenu({ open, tokenExists, createTarget, onClose }) {
               Pods
             </Link>
 
+            <Link to="/connections" className="mobile-link" onClick={onClose}>
+              Connections
+            </Link>
+
             <Link to="/how-it-works" className="mobile-link" onClick={onClose}>
               How It Works
             </Link>

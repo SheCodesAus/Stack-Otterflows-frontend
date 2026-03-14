@@ -315,6 +315,194 @@ function getCommentPlaceholder(kind) {
   }
 }
 
+function getCheckInValueLabel(goal) {
+  if (!goal) return "Amount completed";
+
+  if (goal.metric_type === "DURATION") {
+    return "Minutes completed";
+  }
+
+  if (goal.metric_type === "COUNT") {
+    const rawUnit = goal.unit_label?.trim();
+
+    if (!rawUnit) {
+      return "How many did you complete?";
+    }
+
+    const lowerUnit = rawUnit.toLowerCase();
+
+    if (lowerUnit === "times" || lowerUnit === "time") {
+      return "How many times did you complete it?";
+    }
+
+    return `How many ${lowerUnit} did you complete?`;
+  }
+
+  return "Amount completed";
+}
+
+function getCheckInValueHelper(goal) {
+  if (!goal) return "";
+
+  if (goal.metric_type === "BINARY") {
+    const periodWord = goal.period === "DAILY" ? "day" : "week";
+    return `This check-in marks the goal as completed for the selected ${periodWord}.`;
+  }
+
+  return `Target: ${formatTarget(goal)}`;
+}
+
+function getCheckInNotePlaceholder(goal) {
+  if (!goal) return "Add a quick note about what you completed.";
+
+  if (goal.metric_type === "DURATION") {
+    return "Add a quick note about what you spent this time on.";
+  }
+
+  if (goal.metric_type === "COUNT") {
+    return "Add a quick note about what you completed.";
+  }
+
+  return "Add a quick note about what you completed.";
+}
+
+function getDisplayName(primary, secondary, fallback = "Someone") {
+  return primary || secondary || fallback;
+}
+
+function buildActivityFeed(goal) {
+  if (!goal) return [];
+
+  const items = [];
+
+  (goal.assignments || []).forEach((assignment) => {
+    const buddyName = getDisplayName(
+      assignment.buddy_display_name,
+      assignment.buddy_username,
+      `User ${assignment.buddy}`
+    );
+
+    items.push({
+      id: `assignment-created-${assignment.id}`,
+      type: "assignment_created",
+      timestamp: assignment.created_at,
+      title: `${buddyName} was invited as accountability buddy`,
+      meta: "Buddy invite sent",
+    });
+
+    if (assignment.consent_status === "ACCEPTED" && assignment.responded_at) {
+      items.push({
+        id: `assignment-accepted-${assignment.id}`,
+        type: "assignment_accepted",
+        timestamp: assignment.responded_at,
+        title: `${buddyName} accepted the buddy request`,
+        meta: "Buddy accepted",
+      });
+    }
+
+    if (assignment.consent_status === "DECLINED" && assignment.responded_at) {
+      items.push({
+        id: `assignment-declined-${assignment.id}`,
+        type: "assignment_declined",
+        timestamp: assignment.responded_at,
+        title: `${buddyName} declined the buddy request`,
+        meta: "Buddy declined",
+      });
+    }
+  });
+
+  (goal.checkins || []).forEach((checkin) => {
+    const createdBy = getDisplayName(
+      checkin.created_by_display_name,
+      checkin.created_by_username,
+      `User ${checkin.created_by}`
+    );
+
+    items.push({
+      id: `checkin-created-${checkin.id}`,
+      type: "checkin_created",
+      timestamp: checkin.created_at,
+      title: `${createdBy} submitted a check-in`,
+      meta: formatCheckInValue(goal, checkin),
+      note: checkin.note || "",
+      proof: checkin.proof || "",
+    });
+
+    if (checkin.status === "APPROVED" && checkin.verified_at) {
+      const verifiedBy = getDisplayName(
+        checkin.verified_by_display_name,
+        checkin.verified_by_username,
+        "Buddy"
+      );
+
+      items.push({
+        id: `checkin-approved-${checkin.id}`,
+        type: "checkin_approved",
+        timestamp: checkin.verified_at,
+        title: `${verifiedBy} approved a check-in`,
+        meta: formatCheckInValue(goal, checkin),
+      });
+    }
+
+    if (checkin.status === "REJECTED" && checkin.verified_at) {
+      const verifiedBy = getDisplayName(
+        checkin.verified_by_display_name,
+        checkin.verified_by_username,
+        "Buddy"
+      );
+
+      items.push({
+        id: `checkin-rejected-${checkin.id}`,
+        type: "checkin_rejected",
+        timestamp: checkin.verified_at,
+        title: `${verifiedBy} requested clarification on a check-in`,
+        meta: checkin.rejection_reason || "Needs clarification",
+      });
+    }
+  });
+
+  return items.sort((a, b) => {
+    const aTime = new Date(a.timestamp).getTime();
+    const bTime = new Date(b.timestamp).getTime();
+    return bTime - aTime;
+  });
+}
+
+function getActivityTone(type) {
+  switch (type) {
+    case "assignment_accepted":
+    case "checkin_approved":
+      return "approved";
+    case "assignment_declined":
+    case "checkin_rejected":
+      return "rejected";
+    case "assignment_created":
+    case "checkin_created":
+      return "pending";
+    default:
+      return "inactive";
+  }
+}
+
+function getActivityPillLabel(type) {
+  switch (type) {
+    case "assignment_created":
+      return "Buddy Invite";
+    case "assignment_accepted":
+      return "Buddy Accepted";
+    case "assignment_declined":
+      return "Buddy Declined";
+    case "checkin_created":
+      return "Check-In";
+    case "checkin_approved":
+      return "Approved";
+    case "checkin_rejected":
+      return "Needs Clarification";
+    default:
+      return "Activity";
+  }
+}
+
 function CategoryChip({ category }) {
   const item = categoryMap[category] || categoryMap.OTHER;
 
@@ -358,11 +546,14 @@ export default function GoalDetailPage() {
   const [checkInDate, setCheckInDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
+  const [checkInProof, setCheckInProof] = useState(null);
   const [submittingCheckIn, setSubmittingCheckIn] = useState(false);
 
   const [commentKind, setCommentKind] = useState(DEFAULT_COMMENT_KIND);
   const [commentBody, setCommentBody] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+
+  const [showAllActivity, setShowAllActivity] = useState(false);
 
   useEffect(() => {
     async function loadPage() {
@@ -386,6 +577,7 @@ export default function GoalDetailPage() {
         }
 
         setGoal(goalData);
+        setShowAllActivity(false);
       } catch (err) {
         setError(err.message || "Something went wrong while loading the goal.");
       } finally {
@@ -523,6 +715,13 @@ export default function GoalDetailPage() {
     () => currentPeriodCheckins.filter((checkin) => checkin.status === "REJECTED"),
     [currentPeriodCheckins]
   );
+
+  const activityFeed = useMemo(() => buildActivityFeed(goal), [goal]);
+
+  const visibleActivityFeed = useMemo(() => {
+    if (showAllActivity) return activityFeed;
+    return activityFeed.slice(0, 6);
+  }, [activityFeed, showAllActivity]);
 
   const acceptedBuddyIds = useMemo(() => {
     return acceptedAssignments.map((assignment) => assignment.buddy);
@@ -727,14 +926,19 @@ export default function GoalDetailPage() {
       setSubmittingCheckIn(true);
       clearActionMessages();
 
+      const formData = new FormData();
+      formData.append("goal", String(goal.id));
+      formData.append("period_start", checkInDate);
+      formData.append("value", String(value));
+      formData.append("note", checkInNote.trim());
+
+      if (checkInProof) {
+        formData.append("proof", checkInProof);
+      }
+
       const response = await authFetch("checkins/", {
         method: "POST",
-        body: JSON.stringify({
-          goal: goal.id,
-          period_start: checkInDate,
-          value,
-          note: checkInNote.trim(),
-        }),
+        body: formData,
       });
 
       const data = await response.json().catch(() => ({}));
@@ -752,6 +956,7 @@ export default function GoalDetailPage() {
       }
 
       setCheckInNote("");
+      setCheckInProof(null);
       setShowCheckInForm(false);
       setActionSuccess("Check-in submitted.");
       await refreshGoalDetail();
@@ -925,7 +1130,7 @@ export default function GoalDetailPage() {
 
               {goal.metric_type !== "BINARY" ? (
                 <div className="goal-inline-field">
-                  <label htmlFor="checkin-value">Value</label>
+                  <label htmlFor="checkin-value">{getCheckInValueLabel(goal)}</label>
                   <input
                     id="checkin-value"
                     type="number"
@@ -935,8 +1140,15 @@ export default function GoalDetailPage() {
                     onChange={(event) => setCheckInValue(event.target.value)}
                     required
                   />
+                  <p className="goal-inline-field__hint">{getCheckInValueHelper(goal)}</p>
                 </div>
-              ) : null}
+              ) : (
+                <div className="goal-inline-field">
+                  <label>Completed?</label>
+                  <div className="goal-inline-field__staticValue">Yes</div>
+                  <p className="goal-inline-field__hint">{getCheckInValueHelper(goal)}</p>
+                </div>
+              )}
 
               <div className="goal-inline-field goal-inline-field--full">
                 <label htmlFor="checkin-note">Note</label>
@@ -945,8 +1157,21 @@ export default function GoalDetailPage() {
                   rows="4"
                   value={checkInNote}
                   onChange={(event) => setCheckInNote(event.target.value)}
-                  placeholder="Add a quick note about what you completed."
+                  placeholder={getCheckInNotePlaceholder(goal)}
                 />
+              </div>
+
+              <div className="goal-inline-field goal-inline-field--full">
+                <label htmlFor="checkin-proof">Proof</label>
+                <input
+                  id="checkin-proof"
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx,.txt"
+                  onChange={(event) => setCheckInProof(event.target.files?.[0] || null)}
+                />
+                <p className="goal-inline-field__hint">
+                  Upload a screenshot, photo, or document as proof for this check-in.
+                </p>
               </div>
             </div>
 
@@ -1135,117 +1360,127 @@ export default function GoalDetailPage() {
 
         <aside className="goal-detail-side">
           <article className="goal-card">
-            <div className="goal-card__header">
-              <h2>Accountability Buddy</h2>
-            </div>
+  <div className="goal-card__header">
+    <h2>Accountability Buddy</h2>
+  </div>
 
-            {sortedAssignments.length ? (
-              <div className="goal-assignment-list">
-                {sortedAssignments.map((assignment) => (
-                  <div key={assignment.id} className="goal-assignment-row">
-                    <div>
-                      <strong>
-                        {assignment.buddy_display_name ||
-                          assignment.buddy_username ||
-                          `User ${assignment.buddy}`}
-                      </strong>
-                    </div>
+  {sortedAssignments.length ? (
+    <div className="goal-assignment-list">
+      {sortedAssignments.map((assignment) => (
+        <div key={assignment.id} className="goal-assignment-row">
+          <div>
+            <strong>
+              {assignment.buddy_display_name ||
+                assignment.buddy_username ||
+                `User ${assignment.buddy}`}
+            </strong>
+          </div>
 
-                    <StatusPill tone={getAssignmentTone(assignment.consent_status)}>
-                      {formatStatus(assignment.consent_status)}
-                    </StatusPill>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="goal-empty-text">
-                No buddy assigned yet. Assign a buddy to enable verification for your
-                check-ins.
-              </p>
-            )}
+          <StatusPill tone={getAssignmentTone(assignment.consent_status)}>
+            {formatStatus(assignment.consent_status)}
+          </StatusPill>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="goal-empty-text">
+      No buddy assigned yet. Invite one of your accepted connections to review
+      check-ins for this goal.
+    </p>
+  )}
 
-            {hasAcceptedBuddy ? (
-              <p className="goal-side-note">
-                Accepted buddies can review pending check-ins for this goal.
-              </p>
-            ) : null}
+  {hasAcceptedBuddy ? (
+    <p className="goal-side-note">
+      Accepted buddies can review pending check-ins and help keep this goal on
+      track.
+    </p>
+  ) : null}
 
-            {!hasAcceptedBuddy && hasPendingBuddy ? (
-              <p className="goal-side-note">
-                You have a buddy request waiting for a response.
-              </p>
-            ) : null}
+  {!hasAcceptedBuddy && hasPendingBuddy ? (
+    <p className="goal-side-note">
+      You have a buddy invitation waiting for a response.
+    </p>
+  ) : null}
 
-            {!hasAcceptedBuddy && !hasPendingBuddy && declinedAssignments.length > 0 ? (
-              <p className="goal-side-note">
-                A previous buddy request was declined. You can choose someone else.
-              </p>
-            ) : null}
+  {!hasAcceptedBuddy && !hasPendingBuddy && declinedAssignments.length > 0 ? (
+    <p className="goal-side-note">
+      A previous buddy invitation was declined. You can invite someone else from
+      your connections.
+    </p>
+  ) : null}
 
-            {isOwner ? (
-              <>
-                <div className="goal-card__footerAction">
-                  <button
-                    type="button"
-                    className="btn primary"
-                    onClick={toggleAssignForm}
-                  >
-                    {showAssignForm ? "Close Assign Buddy" : assignButtonLabel}
-                  </button>
+  {!hasAcceptedBuddy && !hasPendingBuddy && sortedAssignments.length === 0 ? (
+    <p className="goal-side-note">
+      You need at least one accepted connection before you can assign a buddy.
+    </p>
+  ) : null}
+
+  {isOwner ? (
+    <>
+      <div className="goal-card__footerAction">
+        <button
+          type="button"
+          className="btn primary"
+          onClick={toggleAssignForm}
+        >
+          {showAssignForm ? "Close Assign Buddy" : assignButtonLabel}
+        </button>
+      </div>
+
+      <div className="goal-card__footerAction">
+        <Link to="/connections" className="btn secondary">
+          Manage Connections
+        </Link>
+      </div>
+
+      {showAssignForm ? (
+        <>
+          {loadingConnections ? (
+            <p className="goal-empty-text">Loading accepted connections...</p>
+          ) : availableConnections.length ? (
+            <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
+              <div className="goal-inline-form__grid">
+                <div className="goal-inline-field goal-inline-field--full">
+                  <label>Choose a buddy</label>
+
+                  <FormDropdown
+                    value={selectedBuddyId}
+                    options={availableConnections.map((person) => ({
+                      value: String(person.id),
+                      label: person.name,
+                    }))}
+                    onChange={(val) => setSelectedBuddyId(val)}
+                    placeholder="Select a connection"
+                  />
                 </div>
+              </div>
 
-                {showAssignForm ? (
-                  <>
-                    {loadingConnections ? (
-                      <p className="goal-empty-text">Loading accepted connections...</p>
-                    ) : availableConnections.length ? (
-                      <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
-                        <div className="goal-inline-form__grid">
-                          <div className="goal-inline-field goal-inline-field--full">
-                            <label htmlFor="buddy-select">Choose a buddy</label>
-                            <select
-                              id="buddy-select"
-                              value={selectedBuddyId}
-                              onChange={(event) => setSelectedBuddyId(event.target.value)}
-                              required
-                            >
-                              <option value="">Select a connection</option>
-                              {availableConnections.map((person) => (
-                                <option key={person.id} value={person.id}>
-                                  {person.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="goal-inline-form__actions">
-                          <button
-                            type="submit"
-                            className="btn primary"
-                            disabled={assigningBuddy}
-                          >
-                            {assigningBuddy ? "Sending..." : "Send Buddy Invite"}
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                        <p className="goal-empty-text">
-                          No available accepted connections to assign right now.
-                        </p>
-                        <div className="goal-card__footerAction">
-                          <Link to="/connections" className="btn secondary">
-                            Manage Connections
-                          </Link>
-                        </div>
-                      </>
-                    )}
-                  </>
-                ) : null}
-              </>
-            ) : null}
-          </article>
+              <div className="goal-inline-form__actions">
+                <button
+                  type="submit"
+                  className="btn primary"
+                  disabled={assigningBuddy}
+                >
+                  {assigningBuddy ? "Sending..." : "Send Buddy Invite"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <p className="goal-empty-text">
+                You do not have any accepted connections available to assign yet.
+              </p>
+              <p className="goal-side-note">
+                Visit Connections to send invites, accept requests, or grow your
+                accountability circle.
+              </p>
+            </>
+          )}
+        </>
+      ) : null}
+    </>
+  ) : null}
+</article>
 
           <article className="goal-card">
             <div className="goal-card__header">
@@ -1385,6 +1620,75 @@ export default function GoalDetailPage() {
             </button>
           </div>
         </form>
+      </article>
+
+      <article className="goal-card">
+        <div className="goal-card__header">
+          <h2>Recent Activity</h2>
+        </div>
+
+        <p className="goal-side-note">
+          System history for buddy invites, check-ins, and verification activity.
+        </p>
+
+        {activityFeed.length ? (
+          <>
+            <div className="goal-activity-list">
+              {visibleActivityFeed.map((item) => (
+                <div key={item.id} className="goal-activity-row">
+                  <div className="goal-activity-row__top">
+                    <strong>{item.title}</strong>
+                    <StatusPill tone={getActivityTone(item.type)}>
+                      {getActivityPillLabel(item.type)}
+                    </StatusPill>
+                  </div>
+
+                  <p className="goal-activity-row__date">
+                    {formatDateTime(item.timestamp)}
+                  </p>
+
+                  {item.meta ? (
+                    <p className="goal-activity-row__meta">{item.meta}</p>
+                  ) : null}
+
+                  {item.note ? (
+                    <p className="goal-activity-row__note">{item.note}</p>
+                  ) : null}
+
+                  {item.proof ? (
+                    <p>
+                      <span className="goal-checkin-label">Proof:</span>{" "}
+                      <a
+                        href={item.proof}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="goal-checkin-proof-link"
+                      >
+                        View proof
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            {activityFeed.length > 6 ? (
+              <div className="goal-card__footerAction">
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => setShowAllActivity((current) => !current)}
+                >
+                  {showAllActivity
+                    ? "Show Less Activity"
+                    : `View All Activity (${activityFeed.length})`}
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="goal-empty-text">No activity yet.</p>
+        )}
       </article>
     </section>
   );
