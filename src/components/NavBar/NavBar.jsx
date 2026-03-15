@@ -190,9 +190,7 @@ function NavBar() {
       .toUpperCase();
   }, [displayName]);
 
-  const badgeCount =
-    (notificationSummary?.unread_count || 0) +
-    (notificationSummary?.needs_review_count || 0);
+const badgeCount = notificationSummary?.unread_count || 0;
 
   return (
     <header className="navbar">
