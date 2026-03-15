@@ -260,12 +260,13 @@ function formatDurationValue(minutes) {
 }
 
 function getProgressMeasureText(goal, completedValue) {
-  const currentPeriodLabel = goal.period === "DAILY" ? "today" : "this week";
+  const isDaily = goal.period === "DAILY";
+  const currentPeriodLabel = isDaily ? "today" : "this week";
 
   if (goal.status === "PLANNED") {
     return goal.start_date
-      ? `This goal is planned and starts ${formatDate(goal.start_date)}.`
-      : "This goal is planned and has not started yet.";
+      ? `This goal starts ${formatDate(goal.start_date)}.`
+      : "This goal has not started yet.";
   }
 
   if (goal.status === "PAUSED") {
@@ -273,7 +274,9 @@ function getProgressMeasureText(goal, completedValue) {
   }
 
   if (goal.status === "COMPLETED") {
-    return "This goal has been marked complete.";
+    return isDaily
+      ? "Today's goal has been completed."
+      : "This week's goal has been completed.";
   }
 
   if (goal.status === "ARCHIVED") {
@@ -282,26 +285,48 @@ function getProgressMeasureText(goal, completedValue) {
 
   if (goal.metric_type === "BINARY") {
     return completedValue >= 1
-      ? `Completed ${currentPeriodLabel}.`
-      : `Not completed yet ${currentPeriodLabel}.`;
+      ? isDaily
+        ? "Today's goal is complete."
+        : "This week's goal is complete."
+      : isDaily
+      ? "Not completed yet today."
+      : "Not completed yet this week.";
   }
 
   if (goal.metric_type === "DURATION") {
     return `${formatDurationValue(completedValue)} of ${formatDurationValue(
       goal.target_value
-    )} ${currentPeriodLabel}.`;
+    )} completed ${currentPeriodLabel}.`;
   }
 
   const unit = formatUnitLabel(goal.unit_label, goal.target_value);
-  return `${completedValue} of ${goal.target_value} ${unit} ${currentPeriodLabel}.`;
+  return `${completedValue} of ${goal.target_value} ${unit} completed ${currentPeriodLabel}.`;
 }
 
 function getProgressSupportText(goal) {
-  if (goal.status === "PLANNED") return "It will become active once you’re ready to start.";
-  if (goal.status === "PAUSED") return "You can reactivate it later from Edit Goal.";
-  if (goal.status === "COMPLETED") return "You can still view the history and comments here.";
-  if (goal.status === "ARCHIVED") return "Archived goals stay here for reference.";
-  return `Target: ${formatTarget(goal)}`;
+  if (goal.status === "PLANNED") {
+    return goal.start_date
+      ? `Check-ins open on ${formatDate(goal.start_date)}.`
+      : "Check-ins will open once this goal starts.";
+  }
+
+  if (goal.status === "PAUSED") {
+    return "Progress is paused for now.";
+  }
+
+  if (goal.status === "COMPLETED") {
+    return goal.period === "DAILY"
+      ? "This card shows today's progress."
+      : "This card shows this week's progress.";
+  }
+
+  if (goal.status === "ARCHIVED") {
+    return "This card is kept for reference.";
+  }
+
+  return goal.period === "DAILY"
+    ? "This card tracks today's progress."
+    : "This card tracks this week's progress.";
 }
 
 function getCommentPlaceholder(kind) {
@@ -425,7 +450,7 @@ function buildActivityFeed(goal) {
       title: `${createdBy} submitted a check-in`,
       meta: formatCheckInValue(goal, checkin),
       note: checkin.note || "",
-      proof: checkin.proof || "",
+      proof: checkin.proof_url || checkin.proof || "",
     });
 
     if (checkin.status === "APPROVED" && checkin.verified_at) {
@@ -501,6 +526,230 @@ function getActivityPillLabel(type) {
     default:
       return "Activity";
   }
+}
+
+function canAddCheckIn(goal) {
+  if (!goal) {
+    return { allowed: false, reason: "" };
+  }
+
+  const today = startOfToday(new Date());
+
+  if (goal.status === "PLANNED") {
+    return {
+      allowed: false,
+      reason: goal.start_date
+        ? `Check-ins open on ${formatDate(goal.start_date)}.`
+        : "This goal has not started yet.",
+    };
+  }
+
+  if (goal.status === "PAUSED") {
+    return {
+      allowed: false,
+      reason: "This goal is currently paused.",
+    };
+  }
+
+  if (goal.status === "COMPLETED") {
+    return {
+      allowed: false,
+      reason: "This goal has already been completed.",
+    };
+  }
+
+  if (goal.status === "ARCHIVED") {
+    return {
+      allowed: false,
+      reason: "This goal has been archived.",
+    };
+  }
+
+  if (goal.start_date) {
+    const startDate = startOfToday(goal.start_date);
+    if (startDate > today) {
+      return {
+        allowed: false,
+        reason: `Check-ins open on ${formatDate(goal.start_date)}.`,
+      };
+    }
+  }
+
+  if (goal.end_date) {
+    const endDate = startOfToday(goal.end_date);
+    if (endDate < today) {
+      return {
+        allowed: false,
+        reason: "This goal has ended.",
+      };
+    }
+  }
+
+  return { allowed: true, reason: "" };
+}
+
+function getDisplayCurrentProgressPercent(goal, rawPercent) {
+  if (!goal) return 0;
+
+  if (goal.status === "PLANNED") return 0;
+  if (goal.status === "PAUSED") return 0;
+  if (goal.status === "ARCHIVED") return 0;
+  if (goal.status === "COMPLETED") return 100;
+
+  return rawPercent;
+}
+
+function getPeriodStartDate(value, period) {
+  const date = startOfToday(value);
+
+  if (period === "WEEKLY") {
+    const dayIndex = (date.getDay() + 6) % 7;
+    date.setDate(date.getDate() - dayIndex);
+  }
+
+  return date;
+}
+
+function getPeriodKey(value, period) {
+  const date = getPeriodStartDate(value, period);
+  return date.toISOString().slice(0, 10);
+}
+
+function getScheduledPeriods(goal) {
+  if (!goal?.start_date) return [];
+
+  const start = startOfToday(goal.start_date);
+  const rawEnd = goal.end_date ? startOfToday(goal.end_date) : startOfToday(new Date());
+
+  if (rawEnd < start) return [];
+
+  const periods = [];
+  const seen = new Set();
+
+  for (
+    let cursor = new Date(start);
+    cursor <= rawEnd;
+    cursor.setDate(cursor.getDate() + 1)
+  ) {
+    const key = getPeriodKey(cursor, goal.period);
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      periods.push(key);
+    }
+  }
+
+  return periods;
+}
+
+function getQualifyingCheckins(checkins, mode = "approved") {
+  if (mode === "approved") {
+    return checkins.filter((checkin) => checkin.status === "APPROVED");
+  }
+
+  if (mode === "submitted") {
+    return checkins.filter((checkin) => checkin.status !== "REJECTED");
+  }
+
+  return checkins;
+}
+
+function getOverallGoalProgress(goal, checkins, mode = "approved") {
+  if (!goal) {
+    return {
+      scheduledPeriods: 0,
+      completedValue: 0,
+      targetValue: 0,
+      percent: 0,
+    };
+  }
+
+  const scheduledPeriods = getScheduledPeriods(goal);
+
+  if (!scheduledPeriods.length) {
+    return {
+      scheduledPeriods: 0,
+      completedValue: 0,
+      targetValue: 0,
+      percent: 0,
+    };
+  }
+
+  const qualifyingCheckins = getQualifyingCheckins(checkins, mode);
+
+  const grouped = qualifyingCheckins.reduce((acc, checkin) => {
+    const key = getPeriodKey(checkin.period_start || checkin.created_at, goal.period);
+
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+
+    acc[key].push(checkin);
+    return acc;
+  }, {});
+
+  let completedValue = 0;
+  let targetValue = 0;
+
+  scheduledPeriods.forEach((periodKey) => {
+    const periodCheckins = grouped[periodKey] || [];
+
+    if (goal.metric_type === "BINARY") {
+      targetValue += 1;
+      completedValue += periodCheckins.length > 0 ? 1 : 0;
+      return;
+    }
+
+    const periodTotal = periodCheckins.reduce(
+      (sum, checkin) => sum + (Number(checkin.value) || 0),
+      0
+    );
+
+    const cappedTotal = Math.min(periodTotal, Number(goal.target_value) || 0);
+
+    targetValue += Number(goal.target_value) || 0;
+    completedValue += cappedTotal;
+  });
+
+  const percent =
+    targetValue > 0 ? Math.round((completedValue / targetValue) * 100) : 0;
+
+  return {
+    scheduledPeriods: scheduledPeriods.length,
+    completedValue,
+    targetValue,
+    percent: Math.max(0, Math.min(100, percent)),
+  };
+}
+
+function getOverallProgressText(goal, overallProgress) {
+  if (!goal) return "";
+
+  if (goal.metric_type === "BINARY") {
+    const periodUnit = goal.period === "DAILY" ? "days" : "weeks";
+    return `${overallProgress.completedValue} of ${overallProgress.targetValue} ${periodUnit} completed.`;
+  }
+
+  if (goal.metric_type === "DURATION") {
+    return `${formatDurationValue(overallProgress.completedValue)} of ${formatDurationValue(
+      overallProgress.targetValue
+    )} completed overall.`;
+  }
+
+  const unit = formatUnitLabel(goal.unit_label, overallProgress.targetValue);
+  return `${overallProgress.completedValue} of ${overallProgress.targetValue} ${unit} completed overall.`;
+}
+
+function getOverallProgressSupportText(goal) {
+  if (!goal) return "";
+
+  if (goal.status === "PLANNED") {
+    return goal.start_date
+      ? `Goal starts ${formatDate(goal.start_date)}.`
+      : "This goal has not started yet.";
+  }
+
+  return "This card tracks verified progress across the whole goal.";
 }
 
 function CategoryChip({ category }) {
@@ -773,7 +1022,17 @@ export default function GoalDetailPage() {
     Math.min(100, Math.round((currentPeriodCompletedValue / progressTarget) * 100))
   );
 
-  const progressHeading = goal?.period === "DAILY" ? "Progress Today" : "Progress This Week";
+  const displayCurrentProgressPercent = getDisplayCurrentProgressPercent(
+    goal,
+    progressPercent
+  );
+
+  const overallProgress = useMemo(() => {
+    return getOverallGoalProgress(goal, sortedCheckins, "approved");
+  }, [goal, sortedCheckins]);
+
+const progressHeading =
+  goal?.period === "DAILY" ? "Today’s Progress" : "This Week’s Progress";
 
   const ownerName = useMemo(() => {
     if (!goal) return "";
@@ -789,12 +1048,15 @@ export default function GoalDetailPage() {
     ? "Invite Another Buddy"
     : "Assign Buddy";
 
+  const checkInAvailability = useMemo(() => canAddCheckIn(goal), [goal]);
+
   function clearActionMessages() {
     setActionError("");
     setActionSuccess("");
   }
 
   function toggleCheckInForm() {
+    if (!checkInAvailability.allowed) return;
     clearActionMessages();
     setShowCheckInForm((current) => !current);
     setShowAssignForm(false);
@@ -911,6 +1173,11 @@ export default function GoalDetailPage() {
     event.preventDefault();
 
     const value = goal.metric_type === "BINARY" ? 1 : Number(checkInValue);
+
+    if (!checkInAvailability.allowed) {
+      setActionError(checkInAvailability.reason || "Check-in unavailable.");
+      return;
+    }
 
     if (!checkInDate) {
       setActionError("Please choose a date for the check-in.");
@@ -1080,19 +1347,30 @@ export default function GoalDetailPage() {
           </p>
 
           {isOwner ? (
-            <div className="goal-detail-hero__actions">
-              <Link to={`/goals/${goal.id}/edit`} className="btn secondary">
-                Edit Goal
-              </Link>
+            <>
+              <div className="goal-detail-hero__actions">
+                <Link to={`/goals/${goal.id}/edit`} className="btn secondary">
+                  Edit Goal
+                </Link>
 
-              <button
-                type="button"
-                className="btn primary"
-                onClick={toggleCheckInForm}
-              >
-                {showCheckInForm ? "Close Check-In" : "Add Check-In"}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={toggleCheckInForm}
+                  disabled={!checkInAvailability.allowed}
+                >
+                  {showCheckInForm
+                    ? "Close Check-In"
+                    : checkInAvailability.allowed
+                    ? "Add Check-In"
+                    : "Check-In Unavailable"}
+                </button>
+              </div>
+
+              {!checkInAvailability.allowed ? (
+                <p className="goal-side-note">{checkInAvailability.reason}</p>
+              ) : null}
+            </>
           ) : null}
         </div>
       </header>
@@ -1109,7 +1387,7 @@ export default function GoalDetailPage() {
         </p>
       ) : null}
 
-      {showCheckInForm ? (
+      {showCheckInForm && checkInAvailability.allowed ? (
         <section className="goal-card">
           <div className="goal-card__header">
             <h2>Add Check-In</h2>
@@ -1198,17 +1476,44 @@ export default function GoalDetailPage() {
 
               <div
                 className="goal-progress__bar"
-                aria-label={`${progressPercent}% complete`}
+                aria-label={`${displayCurrentProgressPercent}% complete`}
               >
                 <span
                   className="goal-progress__fill"
-                  style={{ width: `${progressPercent}%` }}
+                  style={{ width: `${displayCurrentProgressPercent}%` }}
                 />
               </div>
 
               <div className="goal-progress__footer">
                 <span>{getProgressSupportText(goal)}</span>
-                <strong>{progressPercent}%</strong>
+                <strong>{displayCurrentProgressPercent}%</strong>
+              </div>
+            </div>
+          </article>
+
+          <article className="goal-card goal-card--progress">
+            <div className="goal-card__header">
+              <h2>Overall Goal Progress</h2>
+            </div>
+
+            <div className="goal-progress">
+              <div className="goal-progress__topline">
+                <strong>{getOverallProgressText(goal, overallProgress)}</strong>
+              </div>
+
+              <div
+                className="goal-progress__bar"
+                aria-label={`${overallProgress.percent}% complete`}
+              >
+                <span
+                  className="goal-progress__fill"
+                  style={{ width: `${overallProgress.percent}%` }}
+                />
+              </div>
+
+              <div className="goal-progress__footer">
+                <span>{getOverallProgressSupportText(goal)}</span>
+                <strong>{overallProgress.percent}%</strong>
               </div>
             </div>
           </article>
@@ -1360,127 +1665,127 @@ export default function GoalDetailPage() {
 
         <aside className="goal-detail-side">
           <article className="goal-card">
-  <div className="goal-card__header">
-    <h2>Accountability Buddy</h2>
-  </div>
+            <div className="goal-card__header">
+              <h2>Accountability Buddy</h2>
+            </div>
 
-  {sortedAssignments.length ? (
-    <div className="goal-assignment-list">
-      {sortedAssignments.map((assignment) => (
-        <div key={assignment.id} className="goal-assignment-row">
-          <div>
-            <strong>
-              {assignment.buddy_display_name ||
-                assignment.buddy_username ||
-                `User ${assignment.buddy}`}
-            </strong>
-          </div>
+            {sortedAssignments.length ? (
+              <div className="goal-assignment-list">
+                {sortedAssignments.map((assignment) => (
+                  <div key={assignment.id} className="goal-assignment-row">
+                    <div>
+                      <strong>
+                        {assignment.buddy_display_name ||
+                          assignment.buddy_username ||
+                          `User ${assignment.buddy}`}
+                      </strong>
+                    </div>
 
-          <StatusPill tone={getAssignmentTone(assignment.consent_status)}>
-            {formatStatus(assignment.consent_status)}
-          </StatusPill>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p className="goal-empty-text">
-      No buddy assigned yet. Invite one of your accepted connections to review
-      check-ins for this goal.
-    </p>
-  )}
-
-  {hasAcceptedBuddy ? (
-    <p className="goal-side-note">
-      Accepted buddies can review pending check-ins and help keep this goal on
-      track.
-    </p>
-  ) : null}
-
-  {!hasAcceptedBuddy && hasPendingBuddy ? (
-    <p className="goal-side-note">
-      You have a buddy invitation waiting for a response.
-    </p>
-  ) : null}
-
-  {!hasAcceptedBuddy && !hasPendingBuddy && declinedAssignments.length > 0 ? (
-    <p className="goal-side-note">
-      A previous buddy invitation was declined. You can invite someone else from
-      your connections.
-    </p>
-  ) : null}
-
-  {!hasAcceptedBuddy && !hasPendingBuddy && sortedAssignments.length === 0 ? (
-    <p className="goal-side-note">
-      You need at least one accepted connection before you can assign a buddy.
-    </p>
-  ) : null}
-
-  {isOwner ? (
-    <>
-      <div className="goal-card__footerAction">
-        <button
-          type="button"
-          className="btn primary"
-          onClick={toggleAssignForm}
-        >
-          {showAssignForm ? "Close Assign Buddy" : assignButtonLabel}
-        </button>
-      </div>
-
-      <div className="goal-card__footerAction">
-        <Link to="/connections" className="btn secondary">
-          Manage Connections
-        </Link>
-      </div>
-
-      {showAssignForm ? (
-        <>
-          {loadingConnections ? (
-            <p className="goal-empty-text">Loading accepted connections...</p>
-          ) : availableConnections.length ? (
-            <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
-              <div className="goal-inline-form__grid">
-                <div className="goal-inline-field goal-inline-field--full">
-                  <label>Choose a buddy</label>
-
-                  <FormDropdown
-                    value={selectedBuddyId}
-                    options={availableConnections.map((person) => ({
-                      value: String(person.id),
-                      label: person.name,
-                    }))}
-                    onChange={(val) => setSelectedBuddyId(val)}
-                    placeholder="Select a connection"
-                  />
-                </div>
+                    <StatusPill tone={getAssignmentTone(assignment.consent_status)}>
+                      {formatStatus(assignment.consent_status)}
+                    </StatusPill>
+                  </div>
+                ))}
               </div>
-
-              <div className="goal-inline-form__actions">
-                <button
-                  type="submit"
-                  className="btn primary"
-                  disabled={assigningBuddy}
-                >
-                  {assigningBuddy ? "Sending..." : "Send Buddy Invite"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
+            ) : (
               <p className="goal-empty-text">
-                You do not have any accepted connections available to assign yet.
+                No buddy assigned yet. Invite one of your accepted connections to review
+                check-ins for this goal.
               </p>
+            )}
+
+            {hasAcceptedBuddy ? (
               <p className="goal-side-note">
-                Visit Connections to send invites, accept requests, or grow your
-                accountability circle.
+                Accepted buddies can review pending check-ins and help keep this goal on
+                track.
               </p>
-            </>
-          )}
-        </>
-      ) : null}
-    </>
-  ) : null}
-</article>
+            ) : null}
+
+            {!hasAcceptedBuddy && hasPendingBuddy ? (
+              <p className="goal-side-note">
+                You have a buddy invitation waiting for a response.
+              </p>
+            ) : null}
+
+            {!hasAcceptedBuddy && !hasPendingBuddy && declinedAssignments.length > 0 ? (
+              <p className="goal-side-note">
+                A previous buddy invitation was declined. You can invite someone else from
+                your connections.
+              </p>
+            ) : null}
+
+            {!hasAcceptedBuddy && !hasPendingBuddy && sortedAssignments.length === 0 ? (
+              <p className="goal-side-note">
+                You need at least one accepted connection before you can assign a buddy.
+              </p>
+            ) : null}
+
+            {isOwner ? (
+              <>
+                <div className="goal-card__footerAction">
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={toggleAssignForm}
+                  >
+                    {showAssignForm ? "Close Assign Buddy" : assignButtonLabel}
+                  </button>
+                </div>
+
+                <div className="goal-card__footerAction">
+                  <Link to="/connections" className="btn secondary">
+                    Manage Connections
+                  </Link>
+                </div>
+
+                {showAssignForm ? (
+                  <>
+                    {loadingConnections ? (
+                      <p className="goal-empty-text">Loading accepted connections...</p>
+                    ) : availableConnections.length ? (
+                      <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
+                        <div className="goal-inline-form__grid">
+                          <div className="goal-inline-field goal-inline-field--full">
+                            <label>Choose a buddy</label>
+
+                            <FormDropdown
+                              value={selectedBuddyId}
+                              options={availableConnections.map((person) => ({
+                                value: String(person.id),
+                                label: person.name,
+                              }))}
+                              onChange={(val) => setSelectedBuddyId(val)}
+                              placeholder="Select a connection"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="goal-inline-form__actions">
+                          <button
+                            type="submit"
+                            className="btn primary"
+                            disabled={assigningBuddy}
+                          >
+                            {assigningBuddy ? "Sending..." : "Send Buddy Invite"}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <p className="goal-empty-text">
+                          You do not have any accepted connections available to assign yet.
+                        </p>
+                        <p className="goal-side-note">
+                          Visit Connections to send invites, accept requests, or grow your
+                          accountability circle.
+                        </p>
+                      </>
+                    )}
+                  </>
+                ) : null}
+              </>
+            ) : null}
+          </article>
 
           <article className="goal-card">
             <div className="goal-card__header">

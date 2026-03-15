@@ -61,11 +61,17 @@ function getBuddyStatusClass(status) {
 }
 
 function formatBuddyLabel(name, status) {
+  const cleanName = name?.trim();
+  const cleanStatus = humanizeEnum(status);
+
   if (status === "Not assigned") return "Not assigned";
-  if (status === "Pending") return name ? `Pending • ${name}` : "Pending";
-  if (status === "Declined") return name ? `Declined • ${name}` : "Declined";
-  if (status === "Accepted") return name || "Accepted";
-  return name || humanizeEnum(status) || "Pending";
+  if (status === "Accepted") return cleanName || "Accepted";
+
+  if (cleanName && cleanStatus) {
+    return `${cleanName} (${cleanStatus})`;
+  }
+
+  return cleanName || cleanStatus || "Pending";
 }
 
 function formatReviewCount(count) {
