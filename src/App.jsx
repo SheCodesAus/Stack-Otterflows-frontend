@@ -17,6 +17,7 @@ import PodDetailPage from "./pages/PodDetailPage";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import EditGoalPage from "./pages/EditGoalPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -103,6 +104,14 @@ function App() {
   element={
     <RequireAuth>
       <EditGoalPage />
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/profile"
+  element={
+    <RequireAuth>
+      <ProfilePage />
     </RequireAuth>
   }
 />

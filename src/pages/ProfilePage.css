@@ -1,0 +1,146 @@
+.profile-page {
+  padding: 28px 0 56px;
+  display: grid;
+  gap: 20px;
+}
+
+.profile-page__header h1 {
+  margin: 0 0 6px;
+}
+
+.profile-page__header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.profile-feedback {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  font-weight: 700;
+  border: 1px solid var(--panel-border);
+}
+
+.profile-feedback--error {
+  color: #ffb3c1;
+  background: rgba(120, 24, 48, 0.22);
+}
+
+.profile-feedback--success {
+  color: #b7ffd8;
+  background: rgba(20, 92, 54, 0.22);
+}
+
+.profile-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  padding: 24px;
+}
+
+.profile-form__layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-avatar-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-avatar {
+  width: 180px;
+  height: 180px;
+  border-radius: 28px;
+  object-fit: cover;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.profile-avatar--placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.profile-avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-upload-btn {
+  cursor: pointer;
+}
+
+.profile-fields {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-field {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-field label {
+  font-weight: 700;
+}
+
+.profile-field input,
+.profile-readonly {
+  min-height: 52px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  padding: 14px 16px;
+  font: inherit;
+}
+
+.profile-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(120, 108, 255, 0.18);
+}
+
+.profile-readonly {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+}
+
+.profile-actions {
+  padding-top: 6px;
+}
+
+.profile-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 760px) {
+  .profile-card {
+    padding: 20px;
+  }
+
+  .profile-form__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-avatar-panel {
+    justify-items: start;
+  }
+
+  .profile-avatar {
+    width: 140px;
+    height: 140px;
+  }
+}
