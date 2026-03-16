@@ -33,12 +33,28 @@ function isGoalAssignmentRequest(notification) {
   return notification.notif_type === "GOAL_ASSIGNMENT_REQUEST";
 }
 
+function isPodInviteRequest(notification) {
+  return notification.notif_type === "POD_INVITE";
+}
+
 function getAssignmentId(notification) {
   return (
     notification.assignment_id ||
     notification.payload_json?.assignment_id ||
     null
   );
+}
+
+function getMembershipId(notification) {
+  return (
+    notification.membership_id ||
+    notification.payload_json?.membership_id ||
+    null
+  );
+}
+
+function getPodId(notification) {
+  return notification.pod_id || notification.payload_json?.pod_id || null;
 }
 
 export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
@@ -104,23 +120,26 @@ export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
     loadNotifications(activeTab);
   }, [open, activeTab]);
 
-async function refreshCurrentView() {
-  await Promise.all([loadSummary(), loadNotifications(activeTab)]);
-  if (onSummaryRefresh) {
-    await onSummaryRefresh();
+  async function refreshCurrentView() {
+    await Promise.all([loadSummary(), loadNotifications(activeTab)]);
+    if (onSummaryRefresh) {
+      await onSummaryRefresh();
+    }
   }
-}
 
   async function handleNotificationClick(notification) {
     try {
       setError("");
+
+      const isActionCard =
+        isGoalAssignmentRequest(notification) || isPodInviteRequest(notification);
 
       if (!notification.is_read) {
         setBusyId(notification.id);
         await markNotificationRead(notification.id);
       }
 
-      if (isGoalAssignmentRequest(notification)) {
+      if (isActionCard) {
         await refreshCurrentView();
         return;
       }
@@ -207,6 +226,59 @@ async function refreshCurrentView() {
     }
   }
 
+  async function handlePodInviteResponse(event, notification, action) {
+    event.stopPropagation();
+
+    const membershipId = getMembershipId(notification);
+    const podId = getPodId(notification);
+
+    if (!membershipId) {
+      setError("This pod invite is missing a membership ID.");
+      return;
+    }
+
+    try {
+      setBusyId(notification.id);
+      setError("");
+
+      const endpoint =
+        action === "accept"
+          ? `pod-memberships/${membershipId}/accept/`
+          : `pod-memberships/${membershipId}/decline/`;
+
+      const response = await authFetch(endpoint, {
+        method: "POST",
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+            `Could not ${action === "accept" ? "accept" : "decline"} pod invite.`
+        );
+      }
+
+      if (!notification.is_read) {
+        await markNotificationRead(notification.id);
+      }
+
+      await refreshCurrentView();
+
+      if (action === "accept" && podId) {
+        onClose();
+        navigate(`/pods/${podId}`);
+      }
+    } catch (err) {
+      setError(
+        err.message ||
+          `Could not ${action === "accept" ? "accept" : "decline"} pod invite.`
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const hasUnread = useMemo(() => (summary?.unread_count || 0) > 0, [summary]);
 
   return (
@@ -262,10 +334,20 @@ async function refreshCurrentView() {
         ) : (
           notifications.map((notification) => {
             const tone = getNotificationTone(notification);
+
             const isBuddyRequest = isGoalAssignmentRequest(notification);
+            const isPodInvite = isPodInviteRequest(notification);
+
             const assignmentId = getAssignmentId(notification);
+            const membershipId = getMembershipId(notification);
+
             const showBuddyActions =
-  isBuddyRequest && !!assignmentId && !notification.is_resolved;
+              isBuddyRequest && !!assignmentId && !notification.is_resolved;
+
+            const showPodInviteActions =
+              isPodInvite && !!membershipId && !notification.is_resolved;
+
+            const isStaticActionCard = showBuddyActions || showPodInviteActions;
             const isBusy = busyId === notification.id;
 
             return (
@@ -273,7 +355,7 @@ async function refreshCurrentView() {
                 key={notification.id}
                 className={`notification-card notification-card--${tone}`}
               >
-                {isBuddyRequest ? (
+                {isStaticActionCard ? (
                   <div className="notification-card__main notification-card__main--static">
                     <div className="notification-card__top">
                       <div className="notification-card__heading">
@@ -297,12 +379,14 @@ async function refreshCurrentView() {
                     <p className="notification-card__message">{notification.message}</p>
 
                     <p className="notification-card__helper">
-  {showBuddyActions
-    ? "Choose Accept or Decline below."
-    : notification.is_resolved
-    ? "This buddy request has already been handled."
-    : "This buddy request is missing its assignment link."}
-</p>
+                      {showBuddyActions
+                        ? "Choose Accept or Decline below."
+                        : showPodInviteActions
+                        ? "Choose Accept or Decline below."
+                        : notification.is_resolved
+                        ? "This notification has already been handled."
+                        : "This notification is missing its action link."}
+                    </p>
                   </div>
                 ) : (
                   <button
@@ -357,6 +441,30 @@ async function refreshCurrentView() {
                         className="btn primary"
                         onClick={(event) =>
                           handleAssignmentResponse(event, notification, "accept")
+                        }
+                        disabled={isBusy}
+                      >
+                        {isBusy ? "Working..." : "Accept"}
+                      </button>
+                    </div>
+                  ) : showPodInviteActions ? (
+                    <div className="notification-card__actions">
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        onClick={(event) =>
+                          handlePodInviteResponse(event, notification, "decline")
+                        }
+                        disabled={isBusy}
+                      >
+                        {isBusy ? "Working..." : "Decline"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={(event) =>
+                          handlePodInviteResponse(event, notification, "accept")
                         }
                         disabled={isBusy}
                       >

@@ -382,21 +382,36 @@ export default function ConnectionsPage() {
       </section>
 
       <section className="connections-stats-panel">
-        <div className="connections-stat">
-          <span className="connections-stat__label">Incoming invites</span>
-          <strong>{loading ? "…" : incomingInvites.length}</strong>
-        </div>
+  <div className="connections-stat">
+    <span className="connections-stat__label connections-stat__label--desktop">
+      Incoming invites
+    </span>
+    <span className="connections-stat__label connections-stat__label--mobile">
+      Incoming
+    </span>
+    <strong>{loading ? "…" : incomingInvites.length}</strong>
+  </div>
 
-        <div className="connections-stat">
-          <span className="connections-stat__label">Sent invites</span>
-          <strong>{loading ? "…" : sentInvites.length}</strong>
-        </div>
+  <div className="connections-stat">
+    <span className="connections-stat__label connections-stat__label--desktop">
+      Sent invites
+    </span>
+    <span className="connections-stat__label connections-stat__label--mobile">
+      Sent
+    </span>
+    <strong>{loading ? "…" : sentInvites.length}</strong>
+  </div>
 
-        <div className="connections-stat">
-          <span className="connections-stat__label">Accepted connections</span>
-          <strong>{loading ? "…" : acceptedConnections.length}</strong>
-        </div>
-      </section>
+  <div className="connections-stat">
+    <span className="connections-stat__label connections-stat__label--desktop">
+      Accepted connections
+    </span>
+    <span className="connections-stat__label connections-stat__label--mobile">
+      Accepted
+    </span>
+    <strong>{loading ? "…" : acceptedConnections.length}</strong>
+  </div>
+</section>
 
       <section className="connections-panel">
         <div className="connections-panel__header">
