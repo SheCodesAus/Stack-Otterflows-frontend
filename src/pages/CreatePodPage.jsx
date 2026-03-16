@@ -1,7 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
+import FormDropdown from "../components/FormDropdown";
 import "./CreateGoalPage.css";
+
+const categoryOptions = [
+  { value: "HEALTH", label: "Health", icon: "🫀" },
+  { value: "EDUCATION", label: "Education", icon: "📚" },
+  { value: "FITNESS", label: "Fitness", icon: "💪" },
+  { value: "CAREER", label: "Career", icon: "💼" },
+  { value: "CREATIVE", label: "Creative", icon: "🎨" },
+  { value: "WELLBEING", label: "Wellbeing", icon: "🌿" },
+  { value: "OTHER", label: "Other", icon: "✨" },
+];
 
 function getErrorMessage(data, fallback) {
   if (!data || typeof data !== "object") {
@@ -27,6 +38,7 @@ export default function CreatePodPage() {
 
   const [formData, setFormData] = useState({
     name: "",
+    category: "OTHER",
     description: "",
   });
 
@@ -39,6 +51,13 @@ export default function CreatePodPage() {
     setFormData((current) => ({
       ...current,
       [name]: value,
+    }));
+  }
+
+  function handleCategoryChange(nextValue) {
+    setFormData((current) => ({
+      ...current,
+      category: nextValue,
     }));
   }
 
@@ -64,6 +83,7 @@ export default function CreatePodPage() {
         method: "POST",
         body: JSON.stringify({
           name: trimmedName,
+          category: formData.category,
           description: trimmedDescription,
         }),
       });
@@ -95,7 +115,8 @@ export default function CreatePodPage() {
             <h1>Create Pod</h1>
             <p>
               Start a shared accountability pod where members can support each
-              other, work toward goals together, and celebrate progress as a group.
+              other, work toward goals together, and celebrate progress as a
+              group.
             </p>
           </header>
         </section>
@@ -106,8 +127,8 @@ export default function CreatePodPage() {
               <div className="create-goal-section__header">
                 <h2>Pod details</h2>
                 <p>
-                  Give your pod a clear name and a short description so people know
-                  what the group is for.
+                  Give your pod a clear name, choose a category, and add a short
+                  description so people know what the group is for.
                 </p>
               </div>
 
@@ -121,9 +142,24 @@ export default function CreatePodPage() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="e.g. Morning Movement Crew"
-                    maxLength="120"
+                    maxLength={120}
                     required
+                    disabled={isSubmitting}
                   />
+                </div>
+
+                <div className="create-goal-field create-goal-field--full">
+                  <label>Category</label>
+                  <FormDropdown
+                    value={formData.category}
+                    options={categoryOptions}
+                    onChange={handleCategoryChange}
+                    disabled={isSubmitting}
+                    placeholder="Select a category"
+                  />
+                  <p className="create-goal-hint">
+                    Choose the main theme of this pod.
+                  </p>
                 </div>
 
                 <div className="create-goal-field create-goal-field--full">
@@ -133,9 +169,10 @@ export default function CreatePodPage() {
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    rows="4"
-                    maxLength="1000"
+                    rows={5}
+                    maxLength={1000}
                     placeholder="What’s this pod about, who is it for, and what kind of goals will you work on together?"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -144,11 +181,15 @@ export default function CreatePodPage() {
             {error ? <p className="create-goal-error">{error}</p> : null}
 
             <div className="create-goal-actions">
-              <Link to="/pods" className="btn link">
+              <Link to="/pods" className="btn create-goal-cancel-btn">
                 Cancel
               </Link>
 
-              <button type="submit" className="btn primary" disabled={isSubmitting}>
+              <button
+                type="submit"
+                className="btn primary"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Creating..." : "Create Pod"}
               </button>
             </div>

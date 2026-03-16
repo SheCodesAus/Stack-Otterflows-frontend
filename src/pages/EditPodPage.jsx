@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
+import FormDropdown from "../components/FormDropdown";
 import "./CreateGoalPage.css";
+
+const categoryOptions = [
+  { value: "HEALTH", label: "Health", icon: "🫀" },
+  { value: "EDUCATION", label: "Education", icon: "📚" },
+  { value: "FITNESS", label: "Fitness", icon: "💪" },
+  { value: "CAREER", label: "Career", icon: "💼" },
+  { value: "CREATIVE", label: "Creative", icon: "🎨" },
+  { value: "WELLBEING", label: "Wellbeing", icon: "🌿" },
+  { value: "OTHER", label: "Other", icon: "✨" },
+];
 
 function getErrorMessage(data, fallback) {
   if (!data || typeof data !== "object") {
@@ -28,6 +39,7 @@ export default function EditPodPage() {
 
   const [formData, setFormData] = useState({
     name: "",
+    category: "OTHER",
     description: "",
   });
 
@@ -50,6 +62,7 @@ export default function EditPodPage() {
 
         setFormData({
           name: data.name || "",
+          category: data.category || "OTHER",
           description: data.description || "",
         });
       } catch (err) {
@@ -68,6 +81,13 @@ export default function EditPodPage() {
     setFormData((current) => ({
       ...current,
       [name]: value,
+    }));
+  }
+
+  function handleCategoryChange(nextValue) {
+    setFormData((current) => ({
+      ...current,
+      category: nextValue,
     }));
   }
 
@@ -93,6 +113,7 @@ export default function EditPodPage() {
         method: "PATCH",
         body: JSON.stringify({
           name: trimmedName,
+          category: formData.category,
           description: trimmedDescription,
         }),
       });
@@ -143,8 +164,8 @@ export default function EditPodPage() {
           <header className="create-goal-header">
             <h1>Edit Pod</h1>
             <p>
-              Update the pod name and description without changing its members or
-              goals.
+              Update the pod name, category, and description without changing
+              its members or goals.
             </p>
           </header>
         </section>
@@ -154,7 +175,7 @@ export default function EditPodPage() {
             <section className="create-goal-section">
               <div className="create-goal-section__header">
                 <h2>Pod details</h2>
-                <p>Refine the pod name and description here.</p>
+                <p>Refine the pod name, category, and description here.</p>
               </div>
 
               <div className="create-goal-grid">
@@ -166,9 +187,24 @@ export default function EditPodPage() {
                     type="text"
                     value={formData.name}
                     onChange={handleChange}
-                    maxLength="120"
+                    maxLength={120}
                     required
+                    disabled={isSubmitting}
                   />
+                </div>
+
+                <div className="create-goal-field create-goal-field--full">
+                  <label>Category</label>
+                  <FormDropdown
+                    value={formData.category}
+                    options={categoryOptions}
+                    onChange={handleCategoryChange}
+                    disabled={isSubmitting}
+                    placeholder="Select a category"
+                  />
+                  <p className="create-goal-hint">
+                    Choose the main theme that best fits this pod.
+                  </p>
                 </div>
 
                 <div className="create-goal-field create-goal-field--full">
@@ -178,9 +214,10 @@ export default function EditPodPage() {
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    rows="4"
-                    maxLength="1000"
+                    rows={5}
+                    maxLength={1000}
                     placeholder="What’s this pod about?"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -193,7 +230,11 @@ export default function EditPodPage() {
                 Cancel
               </Link>
 
-              <button type="submit" className="btn primary" disabled={isSubmitting}>
+              <button
+                type="submit"
+                className="btn primary"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>

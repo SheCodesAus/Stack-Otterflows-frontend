@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import "./PodDetailPage.css";
@@ -41,22 +41,34 @@ function getStatusTone(status) {
     case "ACTIVE":
       return "active";
     case "INVITED":
+    case "PLANNED":
       return "planned";
     case "DECLINED":
     case "REMOVED":
       return "rejected";
     case "LEFT":
+    case "ARCHIVED":
       return "inactive";
     case "OWNER":
-    case "ADMIN":
       return "approved";
-    case "PLANNED":
-      return "planned";
+    case "ADMIN":
+      return "active";
     case "PAUSED":
       return "paused";
     case "COMPLETED":
       return "completed";
-    case "ARCHIVED":
+    default:
+      return "inactive";
+  }
+}
+
+function getRoleTone(role) {
+  switch (role) {
+    case "OWNER":
+      return "approved";
+    case "ADMIN":
+      return "active";
+    case "MEMBER":
       return "inactive";
     default:
       return "inactive";
@@ -123,17 +135,19 @@ function formatTarget(goal) {
   return "Not set";
 }
 
-function getRoleTone(role) {
-  switch (role) {
-    case "OWNER":
-      return "approved";
-    case "ADMIN":
-      return "active";
-    case "MEMBER":
-      return "inactive";
-    default:
-      return "inactive";
-  }
+function getDisplayName(member) {
+  return (
+    member.user_display_name ||
+    member.user_username ||
+    `User ${member.user}`
+  );
+}
+
+function getInitials(name) {
+  if (!name) return "?";
+
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((part) => part[0]?.toUpperCase()).join("") || "?";
 }
 
 function StatusPill({ children, tone = "inactive" }) {
@@ -164,39 +178,47 @@ export default function PodDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadPod() {
-      try {
-        setLoading(true);
-        setError("");
+  const loadPod = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await authFetch(`pods/${podId}/`);
-        const data = await response.json().catch(() => ({}));
+      const response = await authFetch(`pods/${podId}/`);
+      const data = await response.json().catch(() => ({}));
 
-        if (!response.ok) {
-          throw new Error(data?.detail || "Failed to load pod.");
-        }
-
-        setPod(data);
-      } catch (err) {
-        setError(err.message || "Something went wrong while loading the pod.");
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(data?.detail || "Failed to load pod.");
       }
-    }
 
-    loadPod();
+      setPod(data);
+    } catch (err) {
+      setError(err.message || "Something went wrong while loading the pod.");
+    } finally {
+      setLoading(false);
+    }
   }, [podId]);
 
+  useEffect(() => {
+    loadPod();
+  }, [loadPod]);
+
   const activeMembers = useMemo(() => {
-    if (!pod?.memberships) return [];
-    return pod.memberships.filter((member) => member.status === "ACTIVE");
-  }, [pod]);
+    const memberships = pod?.memberships ?? [];
+    return memberships.filter((member) => member.status === "ACTIVE");
+  }, [pod?.memberships]);
 
   const invitedMembers = useMemo(() => {
-    if (!pod?.memberships) return [];
-    return pod.memberships.filter((member) => member.status === "INVITED");
-  }, [pod]);
+    const memberships = pod?.memberships ?? [];
+    return memberships.filter((member) => member.status === "INVITED");
+  }, [pod?.memberships]);
+
+  const ownerCount = useMemo(() => {
+    return activeMembers.filter((member) => member.role === "OWNER").length;
+  }, [activeMembers]);
+
+  const adminCount = useMemo(() => {
+    return activeMembers.filter((member) => member.role === "ADMIN").length;
+  }, [activeMembers]);
 
   const sortedGoals = useMemo(() => {
     if (!pod?.pod_goals) return [];
@@ -206,7 +228,7 @@ export default function PodDetailPage() {
       const bDate = new Date(b.created_at).getTime();
       return bDate - aDate;
     });
-  }, [pod]);
+  }, [pod?.pod_goals]);
 
   if (loading) {
     return (
@@ -218,7 +240,9 @@ export default function PodDetailPage() {
           </Link>
         </div>
 
-        <p>Loading pod...</p>
+        <div className="pod-card">
+          <p className="pod-empty-text">Loading pod...</p>
+        </div>
       </section>
     );
   }
@@ -233,7 +257,9 @@ export default function PodDetailPage() {
           </Link>
         </div>
 
-        <p>{error}</p>
+        <div className="pod-card">
+          <p className="pod-empty-text">{error}</p>
+        </div>
       </section>
     );
   }
@@ -248,7 +274,9 @@ export default function PodDetailPage() {
           </Link>
         </div>
 
-        <p>Pod not found.</p>
+        <div className="pod-card">
+          <p className="pod-empty-text">Pod not found.</p>
+        </div>
       </section>
     );
   }
@@ -263,56 +291,57 @@ export default function PodDetailPage() {
       </div>
 
       <header className="pod-detail-hero">
-        <div className="pod-detail-hero__main">
-          <div className="pod-detail-hero__meta">
-            <StatusPill tone={pod.is_active ? "active" : "inactive"}>
-              {pod.is_active ? "Active Pod" : "Inactive Pod"}
-            </StatusPill>
-          </div>
+        <div className="pod-detail-hero__meta">
+          <CategoryChip category={pod.category} />
+          <StatusPill tone={pod.is_active ? "active" : "inactive"}>
+            {pod.is_active ? "Active Pod" : "Inactive Pod"}
+          </StatusPill>
+        </div>
 
-          <h1>{pod.name}</h1>
+        <h1>{pod.name}</h1>
 
-          <p className="pod-detail-hero__summary">
-            Shared accountability space for goals, check-ins, and progress.
-          </p>
+        <p className="pod-detail-hero__summary">
+          Shared accountability space for goals, check-ins, and progress.
+        </p>
 
-          <p className="pod-detail-hero__description">
-            {pod.description || "No description added yet."}
-          </p>
+        <p className="pod-detail-hero__description">
+          {pod.description ||
+            "Add a short description so people know what this pod is about."}
+        </p>
 
-          <div className="pod-detail-hero__actions">
-            <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
-              Create Pod Goal
-            </Link>
+        <div className="pod-detail-hero__actions">
+          <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
+            Create Pod Goal
+          </Link>
 
-            <Link to={`/pods/${pod.id}/edit`} className="btn secondary">
-              Edit Pod
-            </Link>
-
-            <button type="button" className="btn secondary" disabled>
-              Invite Member
-            </button>
-          </div>
-
-          <p className="pod-side-note">
-            Member invites can be wired in next from the pod memberships endpoint.
-          </p>
+          <Link to={`/pods/${pod.id}/edit`} className="btn secondary">
+            Edit Pod
+          </Link>
         </div>
       </header>
 
       <section className="pod-detail-grid">
         <div className="pod-detail-main">
           <article className="pod-card">
-            <div className="pod-card__header">
-              <h2>Pod Goals</h2>
+            <div className="pod-card__header pod-card__header--split">
+              <div>
+                <h2 className="pod-card__title pod-card__title--accent">
+                  Pod Goals
+                </h2>
+                <p>Shared goals keep the pod focused and moving together.</p>
+              </div>
+
+              <span className="pod-card__count">
+                {sortedGoals.length} {sortedGoals.length === 1 ? "goal" : "goals"}
+              </span>
             </div>
 
             {sortedGoals.length ? (
               <div className="pod-goal-list">
                 {sortedGoals.map((goal) => (
-                  <div key={goal.id} className="pod-goal-row">
-                    <div className="pod-goal-row__content">
-                      <div className="pod-goal-row__meta">
+                  <div key={goal.id} className="pod-goal-item">
+                    <div className="pod-goal-item__main">
+                      <div className="pod-goal-item__meta">
                         <CategoryChip category={goal.category} />
                         <StatusPill tone={getStatusTone(goal.status)}>
                           {formatStatus(goal.status)}
@@ -321,18 +350,20 @@ export default function PodDetailPage() {
 
                       <h3>{goal.title}</h3>
 
-                      <p className="pod-goal-row__summary">
+                      <p className="pod-goal-item__summary">
                         {goal.motivation || "No motivation added yet."}
                       </p>
 
-                      <div className="pod-goal-row__details">
+                      <div className="pod-goal-item__details">
                         <span>{formatFrequency(goal.period)}</span>
                         <span>•</span>
                         <span>{formatTarget(goal)}</span>
+                        <span>•</span>
+                        <span>Created {formatDate(goal.created_at)}</span>
                       </div>
                     </div>
 
-                    <div className="pod-goal-row__actions">
+                    <div className="pod-goal-item__actions">
                       <Link
                         to={`/pods/${pod.id}/goals/${goal.id}`}
                         className="btn secondary"
@@ -345,7 +376,8 @@ export default function PodDetailPage() {
               </div>
             ) : (
               <div className="pod-empty-state">
-                <p>No pod goals yet.</p>
+                <p>No pod goals yet. Start with one shared challenge.</p>
+
                 <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
                   Create First Pod Goal
                 </Link>
@@ -354,25 +386,38 @@ export default function PodDetailPage() {
           </article>
 
           <article className="pod-card">
-            <div className="pod-card__header">
-              <h2>Active Members</h2>
+            <div className="pod-card__header pod-card__header--split">
+              <div>
+                <h2 className="pod-card__title pod-card__title--accent">
+                  Active Members
+                </h2>
+                <p>These members can check in, comment, and review progress.</p>
+              </div>
+
+              <span className="pod-card__count">
+                {activeMembers.length}{" "}
+                {activeMembers.length === 1 ? "member" : "members"}
+              </span>
             </div>
 
             {activeMembers.length ? (
               <div className="pod-member-list">
                 {activeMembers.map((member) => {
-                  const displayName =
-                    member.user_display_name ||
-                    member.user_username ||
-                    `User ${member.user}`;
+                  const displayName = getDisplayName(member);
 
                   return (
                     <div key={member.id} className="pod-member-row">
-                      <div className="pod-member-row__content">
-                        <strong>{displayName}</strong>
-                        <span className="pod-member-row__meta">
-                          Joined {formatDate(member.created_at)}
-                        </span>
+                      <div className="pod-member-row__identity">
+                        <div className="pod-member-avatar" aria-hidden="true">
+                          {getInitials(displayName)}
+                        </div>
+
+                        <div className="pod-member-row__content">
+                          <strong>{displayName}</strong>
+                          <span className="pod-member-row__meta">
+                            Joined {formatDate(member.created_at)}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="pod-member-row__pills">
@@ -394,24 +439,37 @@ export default function PodDetailPage() {
 
           {invitedMembers.length ? (
             <article className="pod-card">
-              <div className="pod-card__header">
-                <h2>Pending Invites</h2>
+              <div className="pod-card__header pod-card__header--split">
+                <div>
+                  <h2 className="pod-card__title pod-card__title--accent">
+                    Pending Invites
+                  </h2>
+                  <p>These people have been invited but haven’t responded yet.</p>
+                </div>
+
+                <span className="pod-card__count">
+                  {invitedMembers.length}{" "}
+                  {invitedMembers.length === 1 ? "invite" : "invites"}
+                </span>
               </div>
 
               <div className="pod-member-list">
                 {invitedMembers.map((member) => {
-                  const displayName =
-                    member.user_display_name ||
-                    member.user_username ||
-                    `User ${member.user}`;
+                  const displayName = getDisplayName(member);
 
                   return (
                     <div key={member.id} className="pod-member-row">
-                      <div className="pod-member-row__content">
-                        <strong>{displayName}</strong>
-                        <span className="pod-member-row__meta">
-                          Invited {formatDate(member.created_at)}
-                        </span>
+                      <div className="pod-member-row__identity">
+                        <div className="pod-member-avatar" aria-hidden="true">
+                          {getInitials(displayName)}
+                        </div>
+
+                        <div className="pod-member-row__content">
+                          <strong>{displayName}</strong>
+                          <span className="pod-member-row__meta">
+                            Invited {formatDate(member.created_at)}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="pod-member-row__pills">
@@ -431,57 +489,57 @@ export default function PodDetailPage() {
         </div>
 
         <aside className="pod-detail-side">
-          <article className="pod-card">
+          <article className="pod-card pod-card--details">
             <div className="pod-card__header">
-              <h2>Pod Summary</h2>
+              <h2 className="pod-card__title pod-card__title--accent">
+                Pod Overview
+              </h2>
+              <p>See who created this pod, when it started, and who helps manage it.</p>
             </div>
 
-            <div className="pod-summary-list">
-              <div className="pod-summary-row">
-                <span>Created by</span>
-                <strong>
-                  {pod.created_by_display_name ||
-                    pod.created_by_username ||
-                    "Unknown"}
-                </strong>
+            <div className="pod-details-panel">
+              <div className="pod-summary-list">
+                <div className="pod-summary-row">
+                  <span>Created by</span>
+                  <strong>
+                    {pod.created_by_display_name ||
+                      pod.created_by_username ||
+                      "Unknown"}
+                  </strong>
+                </div>
+
+                <div className="pod-summary-row">
+                  <span>Created</span>
+                  <strong>{formatDate(pod.created_at)}</strong>
+                </div>
               </div>
 
-              <div className="pod-summary-row">
-                <span>Created</span>
-                <strong>{formatDate(pod.created_at)}</strong>
-              </div>
+              <div className="pod-overview-metrics">
+                <div className="pod-overview-metric">
+                  <span className="pod-overview-metric__label">Owners</span>
+                  <strong className="pod-overview-metric__value">
+                    {ownerCount}
+                  </strong>
+                </div>
 
-              <div className="pod-summary-row">
-                <span>Status</span>
-                <strong>{pod.is_active ? "Active" : "Inactive"}</strong>
-              </div>
-
-              <div className="pod-summary-row">
-                <span>Active members</span>
-                <strong>{activeMembers.length}</strong>
-              </div>
-
-              <div className="pod-summary-row">
-                <span>Pending invites</span>
-                <strong>{invitedMembers.length}</strong>
-              </div>
-
-              <div className="pod-summary-row">
-                <span>Pod goals</span>
-                <strong>{sortedGoals.length}</strong>
+                <div className="pod-overview-metric">
+                  <span className="pod-overview-metric__label">Admins</span>
+                  <strong className="pod-overview-metric__value">
+                    {adminCount}
+                  </strong>
+                </div>
               </div>
             </div>
-          </article>
 
-          <article className="pod-card">
-            <div className="pod-card__header">
-              <h2>Next Steps</h2>
+            <div className="pod-card__actions pod-card__actions--center">
+              <Link to={`/pods/${pod.id}/members`} className="btn primary">
+                Open Member Manager
+              </Link>
             </div>
 
-            <div className="pod-next-steps">
-              <p>Create a pod goal to start tracking a shared challenge.</p>
-              <p>Invite members so the pod can check in together.</p>
-              <p>Open a pod goal to review progress, comments, and activity.</p>
+            <div className="pod-side-highlight">
+              Active pod members can review pending check-ins, but no one can
+              verify their own.
             </div>
           </article>
         </aside>

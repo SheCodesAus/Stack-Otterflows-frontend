@@ -64,11 +64,12 @@
 
 .create-goal-header p {
   margin: 0;
-  max-width: 52rem;
+  max-width: 58rem;
   color: var(--muted);
   font-size: 1.02rem;
   line-height: 1.55;
   font-weight: 700;
+  text-wrap: pretty;
 }
 
 .create-goal-card {
@@ -107,6 +108,7 @@
   font-size: 0.98rem;
   line-height: 1.5;
   font-weight: 700;
+  text-wrap: pretty;
 }
 
 .create-goal-divider {
@@ -161,12 +163,15 @@
   font-size: 1rem;
   font-weight: 700;
   outline: none;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease,
+    background 0.12s ease;
 }
 
 .create-goal-field textarea {
   resize: vertical;
-  min-height: 124px;
+  min-height: 132px;
 }
 
 .create-goal-field input::placeholder,
@@ -179,6 +184,12 @@
   border-color: rgba(139, 123, 255, 0.65);
   box-shadow: 0 0 0 3px rgba(139, 123, 255, 0.18);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.create-goal-field input:disabled,
+.create-goal-field textarea:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
 }
 
 .create-goal-hint {
@@ -220,6 +231,35 @@
   align-items: center;
   gap: 12px;
   padding: 20px 24px 24px;
+}
+
+.create-goal-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 800;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.create-goal-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(139, 123, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+.create-goal-cancel-btn:focus-visible {
+  outline: 3px solid rgba(139, 123, 255, 0.2);
+  outline-offset: 2px;
 }
 
 @media (max-width: 900px) {
@@ -292,7 +332,8 @@
     padding: 18px 16px 20px;
   }
 
-  .create-goal-actions .btn {
+  .create-goal-actions .btn,
+  .create-goal-cancel-btn {
     width: 100%;
   }
 }
@@ -316,30 +357,4 @@
   .create-goal-section__header h2 {
     font-size: 1.28rem;
   }
-}
-
-.create-goal-cancel-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-  text-decoration: none;
-  font-weight: 800;
-  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
-}
-
-.create-goal-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(139, 123, 255, 0.45);
-  transform: translateY(-1px);
-}
-
-.create-goal-cancel-btn:focus-visible {
-  outline: 3px solid rgba(139, 123, 255, 0.2);
-  outline-offset: 2px;
 }

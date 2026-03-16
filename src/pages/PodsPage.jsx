@@ -3,6 +3,16 @@ import { Link } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import "./GoalsPage.css";
 
+const categoryMap = {
+  HEALTH: { label: "Health", icon: "🫀" },
+  EDUCATION: { label: "Education", icon: "📚" },
+  FITNESS: { label: "Fitness", icon: "💪" },
+  CAREER: { label: "Career", icon: "💼" },
+  CREATIVE: { label: "Creative", icon: "🎨" },
+  WELLBEING: { label: "Wellbeing", icon: "🌿" },
+  OTHER: { label: "Other", icon: "✨" },
+};
+
 function formatShortDate(dateString) {
   if (!dateString) return null;
 
@@ -15,44 +25,53 @@ function formatShortDate(dateString) {
   });
 }
 
-function formatPodSummary(pod) {
+function formatCount(count, singular, plural = `${singular}s`) {
+  const safeCount = Number.isFinite(count) ? count : 0;
+  return `${safeCount} ${safeCount === 1 ? singular : plural}`;
+}
+
+function getPodCategory(pod) {
+  return categoryMap[pod.category] || categoryMap.OTHER;
+}
+
+function getPodMetaLine(pod) {
   const created = formatShortDate(pod.created_at);
-
-  if (pod.description?.trim() && created) {
-    return `${pod.description} • Created ${created}`;
-  }
-
-  if (pod.description?.trim()) {
-    return pod.description;
-  }
-
-  if (created) {
-    return `Created ${created}`;
-  }
-
-  return "Shared accountability space";
+  return created ? `Created ${created}` : null;
 }
 
 function PodRow({ pod }) {
+  const category = getPodCategory(pod);
+  const metaLine = getPodMetaLine(pod);
+  const description = pod.description?.trim();
+  const isActive = Boolean(pod.is_active);
+
   return (
     <article className="goal-row-card">
       <div className="goal-row-card__main">
         <div className="goal-row-card__chips">
-          <span className="goal-chip">
+          <span className="goal-chip goal-chip--category">
             <span className="goal-chip__icon" aria-hidden="true">
-              👥
+              {category.icon}
             </span>
-            <span>Pod</span>
+            <span>{category.label}</span>
           </span>
 
           <span
             className={`goal-status-chip ${
-              pod.is_active
+              isActive
                 ? "goal-status-chip--active"
                 : "goal-status-chip--inactive"
             }`}
           >
-            {pod.is_active ? "Active" : "Inactive"}
+            {isActive ? "Active" : "Inactive"}
+          </span>
+
+          <span className="goal-chip goal-chip--meta">
+            {formatCount(pod.member_count, "member")}
+          </span>
+
+          <span className="goal-chip goal-chip--meta">
+            {formatCount(pod.active_goal_count, "active goal")}
           </span>
         </div>
 
@@ -62,25 +81,34 @@ function PodRow({ pod }) {
 
             <p
               className={`goal-row-card__motivation ${
-                !pod.description ? "goal-row-card__motivation--muted" : ""
+                !description ? "goal-row-card__motivation--muted" : ""
               }`}
             >
-              {pod.description || "No description added yet."}
+              {description || "No description added yet."}
             </p>
           </div>
 
           <Link
             to={`/pods/${pod.id}`}
             className="btn secondary goal-row-card__desktopAction"
+            aria-label={`Open pod ${pod.name}`}
           >
             Open Pod
           </Link>
         </div>
 
-        <div className="goal-row-card__summary">{formatPodSummary(pod)}</div>
+        {metaLine ? (
+          <div className="goal-row-card__summary goal-row-card__summary--muted">
+            {metaLine}
+          </div>
+        ) : null}
 
         <div className="goal-row-card__mobileAction">
-          <Link to={`/pods/${pod.id}`} className="btn secondary">
+          <Link
+            to={`/pods/${pod.id}`}
+            className="btn secondary"
+            aria-label={`Open pod ${pod.name}`}
+          >
             Open Pod
           </Link>
         </div>
@@ -123,7 +151,7 @@ export default function PodsPage() {
   const hasPods = !loading && !error && pods.length > 0;
 
   return (
-    <section className="page-shell goals-page">
+    <section className="page-shell goals-page pods-page">
       <div className="goals-intro-panel">
         <div className="goals-intro">
           <h1>Pods</h1>
@@ -153,8 +181,8 @@ export default function PodsPage() {
           </div>
           <h2>No pods yet</h2>
           <p>
-            Create your first pod to start building a shared accountability space
-            for group goals, check-ins, and encouragement.
+            Create your first pod to start building a shared accountability
+            space for group goals, check-ins, and encouragement.
           </p>
           <Link to="/pods/new" className="btn primary">
             Create your first pod
