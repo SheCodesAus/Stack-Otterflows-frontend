@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import FormDropdown from "../components/FormDropdown";
@@ -42,21 +42,33 @@ const durationUnitOptions = [
   { value: "hours", label: "Hours" },
 ];
 
-function getInitialGoalStatus(startDate) {
-  if (!startDate) return "ACTIVE";
+const statusOptions = [
+  { value: "PLANNED", label: "Planned" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "PAUSED", label: "Paused" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "ARCHIVED", label: "Archived" },
+];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+function getDurationPrefill(targetValue) {
+  const numeric = Number(targetValue) || 0;
 
-  const selected = new Date(startDate);
-  selected.setHours(0, 0, 0, 0);
+  if (numeric >= 60 && numeric % 60 === 0) {
+    return {
+      duration_unit: "hours",
+      target_value: numeric / 60,
+    };
+  }
 
-  return selected > today ? "PLANNED" : "ACTIVE";
+  return {
+    duration_unit: "minutes",
+    target_value: numeric || 20,
+  };
 }
 
-export default function CreatePodGoalPage() {
+export default function EditPodGoalPage() {
   const navigate = useNavigate();
-  const { podId } = useParams();
+  const { podId, podGoalId } = useParams();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -69,8 +81,10 @@ export default function CreatePodGoalPage() {
     duration_unit: "minutes",
     start_date: "",
     end_date: "",
+    status: "ACTIVE",
   });
 
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,8 +97,67 @@ export default function CreatePodGoalPage() {
     [formData.metric_type]
   );
 
+  const statusOption = useMemo(
+    () => statusOptions.find((option) => option.value === formData.status),
+    [formData.status]
+  );
+
   const periodWord = formData.period === "DAILY" ? "day" : "week";
   const durationWord = formData.duration_unit === "hours" ? "hours" : "minutes";
+
+  useEffect(() => {
+    async function loadPodGoal() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await authFetch(`pod-goals/${podGoalId}/`);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data?.detail || "Failed to load pod goal.");
+        }
+
+        if (data.metric_type === "DURATION") {
+          const durationPrefill = getDurationPrefill(data.target_value);
+
+          setFormData({
+            title: data.title || "",
+            motivation: data.motivation || "",
+            category: data.category || "OTHER",
+            metric_type: data.metric_type || "COUNT",
+            period: data.period || "WEEKLY",
+            target_value: durationPrefill.target_value,
+            unit_label: "",
+            duration_unit: durationPrefill.duration_unit,
+            start_date: data.start_date || "",
+            end_date: data.end_date || "",
+            status: data.status || "ACTIVE",
+          });
+        } else {
+          setFormData({
+            title: data.title || "",
+            motivation: data.motivation || "",
+            category: data.category || "OTHER",
+            metric_type: data.metric_type || "COUNT",
+            period: data.period || "WEEKLY",
+            target_value: data.target_value || 1,
+            unit_label: data.unit_label || "",
+            duration_unit: "minutes",
+            start_date: data.start_date || "",
+            end_date: data.end_date || "",
+            status: data.status || "ACTIVE",
+          });
+        }
+      } catch (err) {
+        setError(err.message || "Failed to load pod goal.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPodGoal();
+  }, [podGoalId]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -110,7 +183,7 @@ export default function CreatePodGoalPage() {
 
         if (value === "COUNT") {
           next.target_value = 1;
-          next.unit_label = "";
+          next.unit_label = current.unit_label || "";
         }
 
         if (value === "DURATION") {
@@ -162,7 +235,6 @@ export default function CreatePodGoalPage() {
       }
 
       const payload = {
-        pod: Number(podId),
         title: formData.title.trim(),
         motivation: formData.motivation.trim(),
         category: formData.category,
@@ -172,11 +244,11 @@ export default function CreatePodGoalPage() {
         unit_label: unitLabel,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
-        status: getInitialGoalStatus(formData.start_date),
+        status: formData.status,
       };
 
-      const response = await authFetch("pod-goals/", {
-        method: "POST",
+      const response = await authFetch(`pod-goals/${podGoalId}/`, {
+        method: "PATCH",
         body: JSON.stringify(payload),
       });
 
@@ -191,31 +263,57 @@ export default function CreatePodGoalPage() {
           throw new Error(`${field}: ${message}`);
         }
 
-        throw new Error(data?.detail || "Failed to create pod goal.");
+        throw new Error(data?.detail || "Failed to update pod goal.");
       }
 
-      navigate(`/pods/${podId}/goals/${data.id}`);
+      navigate(`/pods/${podId}/goals/${podGoalId}`);
     } catch (err) {
-      setError(err.message || "Failed to create pod goal.");
+      setError(err.message || "Failed to update pod goal.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <section className="page-shell create-goal-page">
+        <div className="create-goal-layout">
+          <section className="create-goal-intro">
+            <Link
+              to={`/pods/${podId}/goals/${podGoalId}`}
+              className="create-goal-backlink"
+            >
+              <span className="create-goal-backlink__arrow">←</span>
+              <span>Back to Pod Goal</span>
+            </Link>
+
+            <header className="create-goal-header">
+              <h1>Edit Pod Goal</h1>
+              <p>Loading pod goal details...</p>
+            </header>
+          </section>
+        </div>
+      </section>
+    );
   }
 
   return (
     <section className="page-shell create-goal-page">
       <div className="create-goal-layout">
         <section className="create-goal-intro">
-          <Link to={`/pods/${podId}`} className="create-goal-backlink">
+          <Link
+            to={`/pods/${podId}/goals/${podGoalId}`}
+            className="create-goal-backlink"
+          >
             <span className="create-goal-backlink__arrow">←</span>
-            <span>Back to Pod</span>
+            <span>Back to Pod Goal</span>
           </Link>
 
           <header className="create-goal-header">
-            <h1>Create Pod Goal</h1>
+            <h1>Edit Pod Goal</h1>
             <p>
-              Set up a shared goal your pod can track, check in on, and work
-              toward together.
+              Update the shared goal settings, timing, and status without losing
+              pod check-ins and progress history.
             </p>
           </header>
         </section>
@@ -225,19 +323,18 @@ export default function CreatePodGoalPage() {
             <section className="create-goal-section">
               <div className="create-goal-section__header">
                 <h2>What your pod is aiming for</h2>
-                <p>Give your pod goal a clear title and a reason it matters.</p>
+                <p>Adjust the title and motivation if the group focus has changed.</p>
               </div>
 
               <div className="create-goal-grid">
                 <div className="create-goal-field create-goal-field--full">
-                  <label htmlFor="title">Goal title</label>
+                  <label htmlFor="title">Pod goal title</label>
                   <input
                     id="title"
                     name="title"
                     type="text"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder="e.g. Study together 3 times"
                     required
                   />
                 </div>
@@ -261,12 +358,12 @@ export default function CreatePodGoalPage() {
             <section className="create-goal-section">
               <div className="create-goal-section__header">
                 <h2>How your pod will track it</h2>
-                <p>Choose the type of goal and how often your pod will do it.</p>
+                <p>Update the structure of the goal if your group needs to refine it.</p>
               </div>
 
               <div className="create-goal-track-layout">
                 <div className="create-goal-field create-goal-field--full">
-                  <span className="create-goal-label">How will you track this?</span>
+                  <span className="create-goal-label">How will the pod track this?</span>
                   <FormDropdown
                     value={formData.metric_type}
                     options={trackingOptions}
@@ -378,11 +475,8 @@ export default function CreatePodGoalPage() {
 
             <section className="create-goal-section">
               <div className="create-goal-section__header">
-                <h2>Optional dates</h2>
-                <p>
-                  Add a start and end date if this pod goal has a defined
-                  timeframe.
-                </p>
+                <h2>Dates and status</h2>
+                <p>Adjust timing and move the pod goal through its lifecycle here.</p>
               </div>
 
               <div className="create-goal-grid">
@@ -407,18 +501,36 @@ export default function CreatePodGoalPage() {
                     onChange={handleChange}
                   />
                 </div>
+
+                <div className="create-goal-field create-goal-field--full">
+                  <span className="create-goal-label">Goal status</span>
+                  <FormDropdown
+                    value={formData.status}
+                    options={statusOptions}
+                    onChange={(nextValue) => updateField("status", nextValue)}
+                  />
+                </div>
+
+                {statusOption ? (
+                  <p className="create-goal-hint create-goal-hint--context create-goal-field--full">
+                    Current status: {statusOption.label}
+                  </p>
+                ) : null}
               </div>
             </section>
 
             {error ? <p className="create-goal-error">{error}</p> : null}
 
             <div className="create-goal-actions">
-              <Link to={`/pods/${podId}`} className="btn link">
+              <Link
+                to={`/pods/${podId}/goals/${podGoalId}`}
+                className="btn create-goal-cancel-btn"
+              >
                 Cancel
               </Link>
 
               <button type="submit" className="btn primary" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Pod Goal"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>

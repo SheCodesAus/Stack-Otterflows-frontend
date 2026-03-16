@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
+import "./PodDetailPage.css";
+
+const categoryMap = {
+  HEALTH: { label: "Health", icon: "🫀" },
+  EDUCATION: { label: "Education", icon: "📚" },
+  FITNESS: { label: "Fitness", icon: "💪" },
+  CAREER: { label: "Career", icon: "💼" },
+  CREATIVE: { label: "Creative", icon: "🎨" },
+  WELLBEING: { label: "Wellbeing", icon: "🌿" },
+  OTHER: { label: "Other", icon: "✨" },
+};
 
 function formatDate(value) {
   if (!value) return "—";
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
+
   return date.toLocaleDateString("en-AU", {
     day: "numeric",
     month: "short",
@@ -13,12 +26,133 @@ function formatDate(value) {
   });
 }
 
-function StatusPill({ status }) {
-  const slug = (status || "unknown").toLowerCase().replace(/\s+/g, "-");
+function formatStatus(status) {
+  if (!status) return "Unknown";
+
+  return status
+    .toString()
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getStatusTone(status) {
+  switch (status) {
+    case "ACTIVE":
+      return "active";
+    case "INVITED":
+      return "planned";
+    case "DECLINED":
+    case "REMOVED":
+      return "rejected";
+    case "LEFT":
+      return "inactive";
+    case "OWNER":
+    case "ADMIN":
+      return "approved";
+    case "PLANNED":
+      return "planned";
+    case "PAUSED":
+      return "paused";
+    case "COMPLETED":
+      return "completed";
+    case "ARCHIVED":
+      return "inactive";
+    default:
+      return "inactive";
+  }
+}
+
+function formatFrequency(period) {
+  return period === "DAILY" ? "Daily" : "Weekly";
+}
+
+function singularizeUnit(unitLabel) {
+  const cleaned = unitLabel?.trim();
+
+  if (!cleaned) return "time";
+
+  const lower = cleaned.toLowerCase();
+
+  if (lower === "times") return "time";
+
+  if (lower.endsWith("ies")) {
+    return `${cleaned.slice(0, -3)}y`;
+  }
+
+  if (lower.endsWith("s") && !lower.endsWith("ss")) {
+    return cleaned.slice(0, -1);
+  }
+
+  return cleaned;
+}
+
+function formatUnitLabel(unitLabel, targetValue) {
+  const cleaned = unitLabel?.trim();
+
+  if (!cleaned) {
+    return targetValue === 1 ? "time" : "times";
+  }
+
+  return targetValue === 1 ? singularizeUnit(cleaned) : cleaned;
+}
+
+function formatTarget(goal) {
+  const periodWord = goal.period === "DAILY" ? "day" : "week";
+
+  if (goal.metric_type === "BINARY") {
+    return `Complete once per ${periodWord}`;
+  }
+
+  if (goal.metric_type === "DURATION") {
+    const minutes = Number(goal.target_value) || 0;
+
+    if (minutes >= 60 && minutes % 60 === 0) {
+      const hours = minutes / 60;
+      return `${hours} ${hours === 1 ? "hour" : "hours"} per ${periodWord}`;
+    }
+
+    return `${minutes} minutes per ${periodWord}`;
+  }
+
+  if (goal.metric_type === "COUNT") {
+    const unit = formatUnitLabel(goal.unit_label, goal.target_value);
+    return `${goal.target_value} ${unit} per ${periodWord}`;
+  }
+
+  return "Not set";
+}
+
+function getRoleTone(role) {
+  switch (role) {
+    case "OWNER":
+      return "approved";
+    case "ADMIN":
+      return "active";
+    case "MEMBER":
+      return "inactive";
+    default:
+      return "inactive";
+  }
+}
+
+function StatusPill({ children, tone = "inactive" }) {
+  return (
+    <span className={`pod-status-pill pod-status-pill--${tone}`}>
+      {children}
+    </span>
+  );
+}
+
+function CategoryChip({ category }) {
+  const item = categoryMap[category] || categoryMap.OTHER;
 
   return (
-    <span className={`goal-status-pill goal-status-pill--${slug}`}>
-      {status || "Unknown"}
+    <span className="pod-category-chip">
+      <span className="pod-category-chip__icon" aria-hidden="true">
+        {item.icon}
+      </span>
+      <span>{item.label}</span>
     </span>
   );
 }
@@ -31,7 +165,7 @@ export default function PodDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchPodDetail() {
+    async function loadPod() {
       try {
         setLoading(true);
         setError("");
@@ -40,7 +174,7 @@ export default function PodDetailPage() {
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          throw new Error(data?.detail || `Failed to load pod detail (${response.status})`);
+          throw new Error(data?.detail || "Failed to load pod.");
         }
 
         setPod(data);
@@ -51,35 +185,54 @@ export default function PodDetailPage() {
       }
     }
 
-    fetchPodDetail();
+    loadPod();
   }, [podId]);
 
-  const ownerName = useMemo(() => {
-    if (!pod) return "";
-    return pod.owner_display_name || pod.owner_username || "Unknown";
+  const activeMembers = useMemo(() => {
+    if (!pod?.memberships) return [];
+    return pod.memberships.filter((member) => member.status === "ACTIVE");
+  }, [pod]);
+
+  const invitedMembers = useMemo(() => {
+    if (!pod?.memberships) return [];
+    return pod.memberships.filter((member) => member.status === "INVITED");
+  }, [pod]);
+
+  const sortedGoals = useMemo(() => {
+    if (!pod?.pod_goals) return [];
+
+    return [...pod.pod_goals].sort((a, b) => {
+      const aDate = new Date(a.created_at).getTime();
+      const bDate = new Date(b.created_at).getTime();
+      return bDate - aDate;
+    });
   }, [pod]);
 
   if (loading) {
     return (
-      <section className="page-shell">
-        <div className="page-actions">
-          <Link to="/pods" className="btn link">
-            Back to Pods
+      <section className="page-shell pod-detail-page">
+        <div className="pod-detail-topbar">
+          <Link to="/pods" className="pod-detail-backlink">
+            <span aria-hidden="true">←</span>
+            <span>Back to Pods</span>
           </Link>
         </div>
-        <p>Loading pod detail...</p>
+
+        <p>Loading pod...</p>
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className="page-shell">
-        <div className="page-actions">
-          <Link to="/pods" className="btn link">
-            Back to Pods
+      <section className="page-shell pod-detail-page">
+        <div className="pod-detail-topbar">
+          <Link to="/pods" className="pod-detail-backlink">
+            <span aria-hidden="true">←</span>
+            <span>Back to Pods</span>
           </Link>
         </div>
+
         <p>{error}</p>
       </section>
     );
@@ -87,173 +240,252 @@ export default function PodDetailPage() {
 
   if (!pod) {
     return (
-      <section className="page-shell">
-        <div className="page-actions">
-          <Link to="/pods" className="btn link">
-            Back to Pods
+      <section className="page-shell pod-detail-page">
+        <div className="pod-detail-topbar">
+          <Link to="/pods" className="pod-detail-backlink">
+            <span aria-hidden="true">←</span>
+            <span>Back to Pods</span>
           </Link>
         </div>
+
         <p>Pod not found.</p>
       </section>
     );
   }
 
-  const members = pod.memberships || pod.members || [];
-  const podGoals = pod.pod_goals || pod.goals || [];
-  const podCheckins = pod.pod_checkins || pod.checkins || [];
-  const podComments = pod.pod_comments || pod.comments || [];
-
   return (
-    <section className="page-shell">
-      <div className="page-actions">
-        <Link to="/pods" className="btn link">
-          Back to Pods
+    <section className="page-shell pod-detail-page">
+      <div className="pod-detail-topbar">
+        <Link to="/pods" className="pod-detail-backlink">
+          <span aria-hidden="true">←</span>
+          <span>Back to Pods</span>
         </Link>
       </div>
 
-      <header className="goal-detail-hero">
-        <div className="goal-detail-hero__meta">
-          <StatusPill status={pod.is_active ? "Active" : "Inactive"} />
-        </div>
+      <header className="pod-detail-hero">
+        <div className="pod-detail-hero__main">
+          <div className="pod-detail-hero__meta">
+            <StatusPill tone={pod.is_active ? "active" : "inactive"}>
+              {pod.is_active ? "Active Pod" : "Inactive Pod"}
+            </StatusPill>
+          </div>
 
-        <h1>{pod.name || "Untitled Pod"}</h1>
-        <p>{pod.description || "No pod description added yet."}</p>
+          <h1>{pod.name}</h1>
+
+          <p className="pod-detail-hero__summary">
+            Shared accountability space for goals, check-ins, and progress.
+          </p>
+
+          <p className="pod-detail-hero__description">
+            {pod.description || "No description added yet."}
+          </p>
+
+          <div className="pod-detail-hero__actions">
+            <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
+              Create Pod Goal
+            </Link>
+
+            <Link to={`/pods/${pod.id}/edit`} className="btn secondary">
+              Edit Pod
+            </Link>
+
+            <button type="button" className="btn secondary" disabled>
+              Invite Member
+            </button>
+          </div>
+
+          <p className="pod-side-note">
+            Member invites can be wired in next from the pod memberships endpoint.
+          </p>
+        </div>
       </header>
 
-      <section className="goal-detail-grid">
-        <article className="goal-card">
-          <h2>Pod Overview</h2>
-
-          <div className="goal-overview-grid">
-            <div className="goal-overview-item">
-              <span className="goal-overview-item__label">Owner</span>
-              <strong>{ownerName}</strong>
+      <section className="pod-detail-grid">
+        <div className="pod-detail-main">
+          <article className="pod-card">
+            <div className="pod-card__header">
+              <h2>Pod Goals</h2>
             </div>
 
-            <div className="goal-overview-item">
-              <span className="goal-overview-item__label">Members</span>
-              <strong>{members.length}</strong>
-            </div>
+            {sortedGoals.length ? (
+              <div className="pod-goal-list">
+                {sortedGoals.map((goal) => (
+                  <div key={goal.id} className="pod-goal-row">
+                    <div className="pod-goal-row__content">
+                      <div className="pod-goal-row__meta">
+                        <CategoryChip category={goal.category} />
+                        <StatusPill tone={getStatusTone(goal.status)}>
+                          {formatStatus(goal.status)}
+                        </StatusPill>
+                      </div>
 
-            <div className="goal-overview-item">
-              <span className="goal-overview-item__label">Shared Goals</span>
-              <strong>{podGoals.length}</strong>
-            </div>
+                      <h3>{goal.title}</h3>
 
-            <div className="goal-overview-item">
-              <span className="goal-overview-item__label">Created</span>
-              <strong>{formatDate(pod.created_at)}</strong>
-            </div>
-          </div>
-        </article>
+                      <p className="pod-goal-row__summary">
+                        {goal.motivation || "No motivation added yet."}
+                      </p>
 
-        <article className="goal-card">
-          <h2>Members</h2>
+                      <div className="pod-goal-row__details">
+                        <span>{formatFrequency(goal.period)}</span>
+                        <span>•</span>
+                        <span>{formatTarget(goal)}</span>
+                      </div>
+                    </div>
 
-          {members.length ? (
-            <div className="goal-summary-list">
-              {members.map((member) => (
-                <div
-                  key={member.id || member.user || `${member.user_username}-${member.status}`}
-                  className="goal-summary-row"
-                >
-                  <span>
-                    {member.user_display_name ||
-                      member.user_username ||
-                      `User ${member.user}`}
-                  </span>
-                  <strong>{member.status || member.membership_status || "Unknown"}</strong>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No members yet.</p>
-          )}
-        </article>
-      </section>
-
-      <article className="goal-card">
-        <div className="goal-card__header">
-          <h2>Shared Goals</h2>
-        </div>
-
-        {podGoals.length ? (
-          <div className="goal-summary-list">
-            {podGoals.map((goal) => (
-              <div key={goal.id} className="goal-summary-row">
-                <span>{goal.title || goal.goal_title || `Pod Goal ${goal.id}`}</span>
-                <strong>{goal.status || "Active"}</strong>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No shared goals yet.</p>
-        )}
-      </article>
-
-      <article className="goal-card">
-        <div className="goal-card__header">
-          <h2>Pod Check-ins</h2>
-        </div>
-
-        {podCheckins.length ? (
-          <div className="goal-checkin-list">
-            {podCheckins.map((checkin) => (
-              <div key={checkin.id} className="goal-checkin-row">
-                <div className="goal-checkin-row__content">
-                  <div className="goal-checkin-row__top">
-                    <strong>
-                      {checkin.period_start
-                        ? formatDate(checkin.period_start)
-                        : `Check-in ${checkin.id}`}
-                    </strong>
-                    <StatusPill status={checkin.status} />
+                    <div className="pod-goal-row__actions">
+                      <Link
+                        to={`/pods/${pod.id}/goals/${goal.id}`}
+                        className="btn secondary"
+                      >
+                        Open Goal
+                      </Link>
+                    </div>
                   </div>
-
-                  {checkin.note ? <p>{checkin.note}</p> : null}
-
-                  <p>
-                    <span className="goal-checkin-label">Submitted by:</span>{" "}
-                    {checkin.created_by_display_name ||
-                      checkin.created_by_username ||
-                      `User ${checkin.created_by}`}
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p>No pod check-ins yet.</p>
-        )}
-      </article>
+            ) : (
+              <div className="pod-empty-state">
+                <p>No pod goals yet.</p>
+                <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
+                  Create First Pod Goal
+                </Link>
+              </div>
+            )}
+          </article>
 
-      <article className="goal-card">
-        <div className="goal-card__header">
-          <h2>Pod Comments</h2>
+          <article className="pod-card">
+            <div className="pod-card__header">
+              <h2>Active Members</h2>
+            </div>
+
+            {activeMembers.length ? (
+              <div className="pod-member-list">
+                {activeMembers.map((member) => {
+                  const displayName =
+                    member.user_display_name ||
+                    member.user_username ||
+                    `User ${member.user}`;
+
+                  return (
+                    <div key={member.id} className="pod-member-row">
+                      <div className="pod-member-row__content">
+                        <strong>{displayName}</strong>
+                        <span className="pod-member-row__meta">
+                          Joined {formatDate(member.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="pod-member-row__pills">
+                        <StatusPill tone={getRoleTone(member.role)}>
+                          {formatStatus(member.role)}
+                        </StatusPill>
+                        <StatusPill tone={getStatusTone(member.status)}>
+                          {formatStatus(member.status)}
+                        </StatusPill>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="pod-empty-text">No active members yet.</p>
+            )}
+          </article>
+
+          {invitedMembers.length ? (
+            <article className="pod-card">
+              <div className="pod-card__header">
+                <h2>Pending Invites</h2>
+              </div>
+
+              <div className="pod-member-list">
+                {invitedMembers.map((member) => {
+                  const displayName =
+                    member.user_display_name ||
+                    member.user_username ||
+                    `User ${member.user}`;
+
+                  return (
+                    <div key={member.id} className="pod-member-row">
+                      <div className="pod-member-row__content">
+                        <strong>{displayName}</strong>
+                        <span className="pod-member-row__meta">
+                          Invited {formatDate(member.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="pod-member-row__pills">
+                        <StatusPill tone={getRoleTone(member.role)}>
+                          {formatStatus(member.role)}
+                        </StatusPill>
+                        <StatusPill tone="planned">
+                          {formatStatus(member.status)}
+                        </StatusPill>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </article>
+          ) : null}
         </div>
 
-        {podComments.length ? (
-          <div className="goal-comment-list">
-            {podComments.map((comment) => (
-              <div key={comment.id} className="goal-comment">
-                <div className="goal-comment__top">
-                  <strong>
-                    {comment.author_display_name ||
-                      comment.author_username ||
-                      `User ${comment.author}`}
-                  </strong>
-                  <span className="goal-comment__date">
-                    {formatDate(comment.created_at)}
-                  </span>
-                </div>
-                <p>{comment.body}</p>
+        <aside className="pod-detail-side">
+          <article className="pod-card">
+            <div className="pod-card__header">
+              <h2>Pod Summary</h2>
+            </div>
+
+            <div className="pod-summary-list">
+              <div className="pod-summary-row">
+                <span>Created by</span>
+                <strong>
+                  {pod.created_by_display_name ||
+                    pod.created_by_username ||
+                    "Unknown"}
+                </strong>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p>No pod comments yet.</p>
-        )}
-      </article>
+
+              <div className="pod-summary-row">
+                <span>Created</span>
+                <strong>{formatDate(pod.created_at)}</strong>
+              </div>
+
+              <div className="pod-summary-row">
+                <span>Status</span>
+                <strong>{pod.is_active ? "Active" : "Inactive"}</strong>
+              </div>
+
+              <div className="pod-summary-row">
+                <span>Active members</span>
+                <strong>{activeMembers.length}</strong>
+              </div>
+
+              <div className="pod-summary-row">
+                <span>Pending invites</span>
+                <strong>{invitedMembers.length}</strong>
+              </div>
+
+              <div className="pod-summary-row">
+                <span>Pod goals</span>
+                <strong>{sortedGoals.length}</strong>
+              </div>
+            </div>
+          </article>
+
+          <article className="pod-card">
+            <div className="pod-card__header">
+              <h2>Next Steps</h2>
+            </div>
+
+            <div className="pod-next-steps">
+              <p>Create a pod goal to start tracking a shared challenge.</p>
+              <p>Invite members so the pod can check in together.</p>
+              <p>Open a pod goal to review progress, comments, and activity.</p>
+            </div>
+          </article>
+        </aside>
+      </section>
     </section>
   );
 }

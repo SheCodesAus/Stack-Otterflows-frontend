@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import "./CreateGoalPage.css";
 
@@ -22,16 +22,45 @@ function getErrorMessage(data, fallback) {
   return data.detail || fallback;
 }
 
-export default function CreatePodPage() {
+export default function EditPodPage() {
   const navigate = useNavigate();
+  const { podId } = useParams();
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
 
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadPod() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await authFetch(`pods/${podId}/`);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data?.detail || "Failed to load pod.");
+        }
+
+        setFormData({
+          name: data.name || "",
+          description: data.description || "",
+        });
+      } catch (err) {
+        setError(err.message || "Failed to load pod.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPod();
+  }, [podId]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -60,8 +89,8 @@ export default function CreatePodPage() {
     try {
       setIsSubmitting(true);
 
-      const response = await authFetch("pods/", {
-        method: "POST",
+      const response = await authFetch(`pods/${podId}/`, {
+        method: "PATCH",
         body: JSON.stringify({
           name: trimmedName,
           description: trimmedDescription,
@@ -71,31 +100,51 @@ export default function CreatePodPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(getErrorMessage(data, "Failed to create pod."));
+        throw new Error(getErrorMessage(data, "Failed to update pod."));
       }
 
-      navigate(`/pods/${data.id}`);
+      navigate(`/pods/${podId}`);
     } catch (err) {
-      setError(err.message || "Failed to create pod.");
+      setError(err.message || "Failed to update pod.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <section className="page-shell create-goal-page">
+        <div className="create-goal-layout">
+          <section className="create-goal-intro">
+            <Link to={`/pods/${podId}`} className="create-goal-backlink">
+              <span className="create-goal-backlink__arrow">←</span>
+              <span>Back to Pod</span>
+            </Link>
+
+            <header className="create-goal-header">
+              <h1>Edit Pod</h1>
+              <p>Loading pod details...</p>
+            </header>
+          </section>
+        </div>
+      </section>
+    );
   }
 
   return (
     <section className="page-shell create-goal-page">
       <div className="create-goal-layout">
         <section className="create-goal-intro">
-          <Link to="/pods" className="create-goal-backlink">
+          <Link to={`/pods/${podId}`} className="create-goal-backlink">
             <span className="create-goal-backlink__arrow">←</span>
-            <span>Back to Pods</span>
+            <span>Back to Pod</span>
           </Link>
 
           <header className="create-goal-header">
-            <h1>Create Pod</h1>
+            <h1>Edit Pod</h1>
             <p>
-              Start a shared accountability pod where members can support each
-              other, work toward goals together, and celebrate progress as a group.
+              Update the pod name and description without changing its members or
+              goals.
             </p>
           </header>
         </section>
@@ -105,10 +154,7 @@ export default function CreatePodPage() {
             <section className="create-goal-section">
               <div className="create-goal-section__header">
                 <h2>Pod details</h2>
-                <p>
-                  Give your pod a clear name and a short description so people know
-                  what the group is for.
-                </p>
+                <p>Refine the pod name and description here.</p>
               </div>
 
               <div className="create-goal-grid">
@@ -120,7 +166,6 @@ export default function CreatePodPage() {
                     type="text"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="e.g. Morning Movement Crew"
                     maxLength="120"
                     required
                   />
@@ -135,7 +180,7 @@ export default function CreatePodPage() {
                     onChange={handleChange}
                     rows="4"
                     maxLength="1000"
-                    placeholder="What’s this pod about, who is it for, and what kind of goals will you work on together?"
+                    placeholder="What’s this pod about?"
                   />
                 </div>
               </div>
@@ -144,12 +189,12 @@ export default function CreatePodPage() {
             {error ? <p className="create-goal-error">{error}</p> : null}
 
             <div className="create-goal-actions">
-              <Link to="/pods" className="btn link">
+              <Link to={`/pods/${podId}`} className="btn create-goal-cancel-btn">
                 Cancel
               </Link>
 
               <button type="submit" className="btn primary" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Pod"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>

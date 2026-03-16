@@ -60,6 +60,12 @@ function getBuddyStatusClass(status) {
   }
 }
 
+function getPodStatusClass(isActive) {
+  return isActive
+    ? "dashboard-goal-meta__value--approved"
+    : "dashboard-goal-meta__value--empty";
+}
+
 function formatBuddyLabel(name, status) {
   const cleanName = name?.trim();
   const cleanStatus = humanizeEnum(status);
@@ -143,9 +149,7 @@ function normaliseSupportedGoal(detailGoal) {
     category: detailGoal.category,
     motivation: detailGoal.motivation,
     ownerName:
-      detailGoal.owner_display_name ||
-      detailGoal.owner_username ||
-      "Unknown",
+      detailGoal.owner_display_name || detailGoal.owner_username || "Unknown",
     latestCheckInStatus,
   };
 }
@@ -159,7 +163,7 @@ function normalisePod(basePod, detailPod) {
   return {
     id: basePod.id,
     name: basePod.name,
-    summary: basePod.description || "No description yet.",
+    category: basePod.category || detailPod?.category || "OTHER",
     isActive: basePod.is_active,
     activePodGoalsCount,
     memberCount: (detailPod?.memberships || []).length,
@@ -521,27 +525,55 @@ export default function DashboardPage() {
           </p>
         ) : (
           <div className="dashboard-list">
-            {visiblePods.map((pod) => (
-              <article
-                key={pod.id}
-                className="dashboard-row dashboard-row--stacked"
-              >
-                <div className="dashboard-row__content">
-                  <h3>{pod.name}</h3>
-                  <p>{pod.summary}</p>
-                  <p className="dashboard-submeta">
-                    {pod.activePodGoalsCount} active pod goal
-                    {pod.activePodGoalsCount === 1 ? "" : "s"}
-                    {" • "}
-                    {pod.memberCount} member{pod.memberCount === 1 ? "" : "s"}
-                  </p>
-                </div>
+            {visiblePods.map((pod) => {
+              const category = categoryMap[pod.category] || categoryMap.OTHER;
 
-                <Link to={`/pods/${pod.id}`} className="btn secondary">
-                  View Pod
-                </Link>
-              </article>
-            ))}
+              return (
+                <article key={pod.id} className="dashboard-row">
+                  <div className="dashboard-row__content">
+                    <h3 className="dashboard-goal-title">{pod.name}</h3>
+
+                    <div className="dashboard-goal-meta">
+                      <span className="dashboard-goal-meta__item dashboard-goal-meta__item--category">
+                        <span className="dashboard-goal-meta__icon" aria-hidden="true">
+                          {category.icon}
+                        </span>
+                        <span>{category.label}</span>
+                      </span>
+
+                      <span className="dashboard-goal-meta__item">
+                        <span className="dashboard-goal-meta__label">Status:</span>
+                        <span
+                          className={`dashboard-goal-meta__value ${getPodStatusClass(
+                            pod.isActive
+                          )}`}
+                        >
+                          {pod.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </span>
+
+                      <span className="dashboard-goal-meta__item">
+                        <span className="dashboard-goal-meta__label">Pod goals:</span>
+                        <span className="dashboard-goal-meta__value">
+                          {pod.activePodGoalsCount} active
+                        </span>
+                      </span>
+
+                      <span className="dashboard-goal-meta__item">
+                        <span className="dashboard-goal-meta__label">Members:</span>
+                        <span className="dashboard-goal-meta__value">
+                          {pod.memberCount}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link to={`/pods/${pod.id}`} className="btn secondary">
+                    View Pod
+                  </Link>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

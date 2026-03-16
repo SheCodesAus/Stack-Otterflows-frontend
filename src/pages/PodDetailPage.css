@@ -1,0 +1,358 @@
+.pod-detail-page {
+  padding: 28px 0 56px;
+  display: grid;
+  gap: 20px;
+}
+
+.pod-detail-topbar {
+  margin: 0;
+}
+
+.pod-detail-backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.pod-detail-backlink:hover {
+  color: var(--text);
+}
+
+.pod-detail-hero,
+.pod-card {
+  border: 1px solid var(--panel-border, rgba(245, 232, 205, 0.1));
+  border-radius: 28px;
+  background: var(--panel, var(--bg2));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+.pod-detail-hero {
+  padding: 24px;
+}
+
+.pod-detail-hero__main {
+  min-width: 0;
+}
+
+.pod-detail-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pod-detail-hero h1 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.pod-detail-hero__summary {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.pod-detail-hero__description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.pod-detail-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.pod-side-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.pod-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+  gap: 20px;
+}
+
+.pod-detail-main,
+.pod-detail-side {
+  display: grid;
+  gap: 20px;
+}
+
+.pod-card {
+  padding: 20px;
+}
+
+.pod-card__header {
+  margin-bottom: 16px;
+}
+
+.pod-card__header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+
+.pod-category-chip,
+.pod-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pod-category-chip {
+  border: 1px solid rgba(245, 232, 205, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.pod-category-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pod-status-pill--approved {
+  color: #7df0cb;
+  border: 1px solid rgba(60, 214, 167, 0.24);
+  background: rgba(60, 214, 167, 0.12);
+}
+
+.pod-status-pill--active {
+  color: #a9e7bf;
+  border: 1px solid rgba(169, 231, 191, 0.22);
+  background: rgba(169, 231, 191, 0.08);
+}
+
+.pod-status-pill--planned {
+  color: #9fd3ff;
+  border: 1px solid rgba(159, 211, 255, 0.22);
+  background: rgba(159, 211, 255, 0.08);
+}
+
+.pod-status-pill--paused {
+  color: #f1d37a;
+  border: 1px solid rgba(241, 211, 122, 0.22);
+  background: rgba(241, 211, 122, 0.08);
+}
+
+.pod-status-pill--completed {
+  color: #a9e7bf;
+  border: 1px solid rgba(169, 231, 191, 0.22);
+  background: rgba(169, 231, 191, 0.08);
+}
+
+.pod-status-pill--rejected {
+  color: #f3a6b3;
+  border: 1px solid rgba(243, 166, 179, 0.24);
+  background: rgba(243, 166, 179, 0.1);
+}
+
+.pod-status-pill--inactive {
+  color: rgba(253, 244, 225, 0.72);
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pod-goal-list,
+.pod-member-list {
+  display: grid;
+  gap: 14px;
+}
+
+.pod-goal-row,
+.pod-member-row {
+  border: 1px solid rgba(245, 232, 205, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px;
+}
+
+.pod-goal-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pod-goal-row__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.pod-goal-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pod-goal-row h3 {
+  margin: 0 0 8px;
+  color: var(--section-heading, var(--text));
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+.pod-goal-row__summary {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.pod-goal-row__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.pod-goal-row__actions {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.pod-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.pod-member-row__content {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.pod-member-row__content strong {
+  color: var(--text);
+}
+
+.pod-member-row__meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.pod-member-row__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.pod-summary-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pod-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(245, 232, 205, 0.08);
+}
+
+.pod-summary-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.pod-summary-row span {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.pod-summary-row strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+.pod-next-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.pod-next-steps p,
+.pod-empty-text,
+.pod-empty-state p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.pod-empty-state {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+@media (max-width: 900px) {
+  .pod-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .pod-detail-page {
+    gap: 16px;
+  }
+
+  .pod-detail-hero,
+  .pod-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .pod-goal-row,
+  .pod-member-row {
+    display: grid;
+  }
+
+  .pod-goal-row__actions,
+  .pod-member-row__pills {
+    justify-content: start;
+  }
+
+  .pod-goal-row__actions .btn {
+    width: 100%;
+  }
+
+  .pod-detail-hero__actions .btn {
+    width: 100%;
+  }
+}

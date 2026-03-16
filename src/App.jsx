@@ -10,14 +10,20 @@ import DashboardPage from "./pages/DashboardPage";
 import ConnectionsPage from "./pages/ConnectionsPage";
 import GoalsPage from "./pages/GoalsPage";
 import CreateGoalPage from "./pages/CreateGoalPage";
-import CreatePodPage from "./pages/CreatePodPage";
+import EditGoalPage from "./pages/EditGoalPage";
 import GoalDetailPage from "./pages/GoalDetailPage";
 import PodsPage from "./pages/PodsPage";
+import CreatePodPage from "./pages/CreatePodPage";
 import PodDetailPage from "./pages/PodDetailPage";
 import HowItWorksPage from "./pages/HowItWorksPage";
-import NotFoundPage from "./pages/NotFoundPage";
-import EditGoalPage from "./pages/EditGoalPage";
 import ProfilePage from "./pages/ProfilePage";
+import NotFoundPage from "./pages/NotFoundPage";
+import CreatePodGoalPage from "./pages/CreatePodGoalPage";
+import PodGoalDetailPage from "./pages/PodGoalDetailPage";
+import EditPodGoalPage from "./pages/EditPodGoalPage";
+import EditPodPage from "./pages/EditPodPage";
+
+
 
 function App() {
   return (
@@ -74,6 +80,15 @@ function App() {
         />
 
         <Route
+          path="/goals/:goalId/edit"
+          element={
+            <RequireAuth>
+              <EditGoalPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
           path="/pods"
           element={
             <RequireAuth>
@@ -99,19 +114,47 @@ function App() {
             </RequireAuth>
           }
         />
+
         <Route
-  path="/goals/:goalId/edit"
+          path="/profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+  path="/pods/:podId/goals/new"
   element={
     <RequireAuth>
-      <EditGoalPage />
+      <CreatePodGoalPage />
+    </RequireAuth>
+  }
+/>
+
+<Route
+  path="/pods/:podId/goals/:podGoalId"
+  element={
+    <RequireAuth>
+      <PodGoalDetailPage />
+    </RequireAuth>
+  }
+/>
+
+<Route
+  path="/pods/:podId/goals/:podGoalId/edit"
+  element={
+    <RequireAuth>
+      <EditPodGoalPage />
     </RequireAuth>
   }
 />
 <Route
-  path="/profile"
+  path="/pods/:podId/edit"
   element={
     <RequireAuth>
-      <ProfilePage />
+      <EditPodPage />
     </RequireAuth>
   }
 />
