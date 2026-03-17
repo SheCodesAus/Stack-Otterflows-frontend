@@ -108,22 +108,35 @@ Administrative roles oversee pod settings and membership, while a centralised da
 | Profile Page | - Accessible by all registered users (Admins, Approvers, Members)<br>- View personal history of check-ins and earned badges<br>- Update account information and notification preferences | - Requires authentication<br>- Serves as the central hub for individual achievements and activity metrics |
 
 ### Nice To Haves
-
-- **The "Nudge" System and Notifications:** Automated notifications sent to a "Buddy" or Pod Admin if a member hasn't submitted a check-in within their defined timeframe.
-- **Milestone Celebrations:** Interactive animations (e.g., confetti) or digital trophies triggered when a member hits a 7-day or 30-day consistency streak.
-- **Pod Chat/Comments:** A dedicated space on the Pod Dashboard for members to leave words of encouragement on each other’s "sticky note" check-ins.
-- **Public vs Private Pods:** The ability for members to create invite-only pods for sensitive goals or private coaching.
-- **Interactive Charts:** Dynamic line graphs or heatmaps (similar to GitHub contribution calendars) to visualise activity trends over time.
-- **Bulk Verification:** A "Select All" feature for Administrators to approve multiple pending check-ins simultaneously.
-- **Custom Goal Metrics:** Allowing users to define unique units (e.g., "glasses of water" or "lines of code") instead of just binary "Done/Not Done" toggles.
-- **Automated CSV Scheduling:** The ability for the Core Team to schedule weekly data exports to be sent directly to their email.
-- **Dark Mode Toggle:** A high-contrast dark theme for users logging nightly check-ins.
-- **Image Uploads:** Allowing members to attach a photo to their check-in card for extra proof of work (e.g., a photo of a completed gym session).
-- **Mobile App Wrapper (PWA):** Allowing users to add Accountability Pods to their phone home screen for quicker access and "app-like" behaviour.
-- **Leaderboard Filters:** The ability to filter pod rankings by "All Time," "This Month," or "This Week."
-- **Calendar Sync:** Exporting pod deadlines and goal targets to external calendars like Google Calendar or Outlook.
-- **Slack/Discord Integration:** Webhooks that post a notification to a specific channel whenever a Group Pod hits a major milestone.
-- **Reaction Emojis/Assets:** Ability for buddies to react to check-in "sticky notes" with quick emojis to provide instant feedback.
+- Implement a "Delete" function for user-generated content.
+- Implement an "Update" function for user-generated content.
+- Build the "Weekly Snapshot" 2x2 condensed view.
+- Convert all progress bar units to minutes.
+- Display a progress bar for the current week's activity.
+- Display a progress bar for the total project duration.
+- Build the invite-only "Circle of Trust" connection system via mobile number.
+- Add progress counters to the UI.
+- Build a "Poke" feature for partner engagement.
+- Build a "Quick Thank You" (Kudos) feature for partners.
+- Add a top-level banner for system prompts.
+- Add a top-level banner for action reviews.
+- Develop logic to track and display goals in the past.
+- Develop logic to track and display goals in the future.
+- Automated "Nudge" system for members who haven't submitted a check-in.
+- Interactive animations (e.g., confetti) for 7-day or 30-day consistency streaks.
+- Dedicated Pod Dashboard space for encouragement on "sticky note" check-ins.
+- Ability to create invite-only pods for sensitive goals or private coaching.
+- Dynamic line graphs or heatmaps (GitHub-style) to visualize activity trends.
+- "Select All" feature for Administrators to approve multiple check-ins at once.
+- Custom goal metrics (e.g., "glasses of water") instead of binary toggles.
+- Automated CSV scheduling for weekly data exports to the Core Team.
+- High-contrast dark theme for nightly check-ins.
+- Image upload functionality to attach photos to check-in cards.
+- Mobile App Wrapper (PWA) for home screen access.
+- Leaderboard filters for "All Time," "This Month," and "This Week."
+- Calendar Sync for exporting deadlines to Google or Outlook.
+- Slack/Discord Webhooks for major group pod milestones.
+- Reaction emojis for instant feedback on check-in notes.
 
 ## Technical Implementation
 
