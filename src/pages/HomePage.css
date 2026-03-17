@@ -1,0 +1,39 @@
+.home-page {
+  padding: 18px 0 56px;
+}
+
+.home-page__hero-wrap {
+  max-width: var(--site-max);
+  margin: 0 auto;
+  padding: 0 var(--site-pad);
+  box-sizing: border-box;
+}
+
+.home-page__inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--site-pad);
+  box-sizing: border-box;
+}
+
+.home-page__intro {
+  padding: 4px 0 48px;
+}
+
+.home-page__title {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+
+.home-page__lead {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 1.04rem;
+  line-height: 1.6;
+}

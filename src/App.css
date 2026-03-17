@@ -3,8 +3,10 @@
 :root {
 
   /* layout */ 
-  --content-max: 1040px;  /* Explore + Dashboard width */
-  --content-pad: 16px;
+  --content-max: 1080px;  /* Explore + Dashboard width */
+  /* --content-pad: 16px;   */
+  --site-max: 1180px;
+  --site-pad: 20px;
 
   /* Base */
   --bg: #0B0D2A;              /* Indigo Night */
@@ -131,3 +133,8 @@
   place-items:center;
 }
   
+@media (max-width: 640px) {
+  :root {
+    --site-pad: 16px;
+  }
+}

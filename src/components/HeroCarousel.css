@@ -1,0 +1,415 @@
+.hero-carousel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  overflow: hidden;
+  outline: none;
+  height: clamp(420px, 62vh, 620px);
+  margin: 0 0 28px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #10153d 0%, #0b0d2a 100%);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.34),
+    0 2px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+.hero-carousel__bg-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-carousel__bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-size: cover;
+  background-position: var(--hero-bg-pos, center);
+  background-repeat: no-repeat;
+  transform: scale(1.03);
+  transition: opacity 650ms ease;
+}
+
+.hero-carousel__bg.is-active {
+  opacity: 1;
+}
+
+.hero-carousel--reduced .hero-carousel__bg {
+  transform: none;
+  transition: none;
+}
+
+.hero-carousel__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(4, 7, 24, 0.82) 0%,
+      rgba(7, 12, 36, 0.68) 22%,
+      rgba(10, 15, 43, 0.42) 44%,
+      rgba(10, 15, 43, 0.14) 68%,
+      rgba(10, 15, 43, 0) 82%
+    ),
+    radial-gradient(
+      95% 130% at 18% 50%,
+      rgba(0, 0, 0, 0.28) 0%,
+      rgba(0, 0, 0, 0.08) 52%,
+      rgba(0, 0, 0, 0) 72%
+    );
+}
+
+.hero-carousel__tone {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      80% 70% at 24% 18%,
+      rgba(108, 99, 255, 0.22) 0%,
+      rgba(108, 99, 255, 0) 58%
+    ),
+    radial-gradient(
+      70% 70% at 38% 78%,
+      rgba(46, 204, 159, 0.14) 0%,
+      rgba(46, 204, 159, 0) 60%
+    );
+  opacity: 0.9;
+}
+
+.hero-carousel__fade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(7, 10, 28, 0);
+  transition: opacity 220ms ease;
+}
+
+.hero-carousel__fade.is-on {
+  opacity: 1;
+  background: rgba(7, 10, 28, 0.24);
+}
+
+.hero-carousel__inner {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 56px 24px;
+  box-sizing: border-box;
+}
+
+.hero-carousel__content {
+  position: relative;
+  max-width: 700px;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+.hero-carousel__content::before {
+  content: "";
+  position: absolute;
+  left: -72px;
+  top: -54px;
+  width: min(920px, 88vw);
+  height: 380px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      840px 310px at 24% 44%,
+      rgba(0, 0, 0, 0.66) 0%,
+      rgba(0, 0, 0, 0.4) 38%,
+      rgba(0, 0, 0, 0.15) 60%,
+      rgba(0, 0, 0, 0) 78%
+    ),
+    radial-gradient(
+      620px 240px at 8% 78%,
+      rgba(0, 0, 0, 0.34) 0%,
+      rgba(0, 0, 0, 0.14) 52%,
+      rgba(0, 0, 0, 0) 78%
+    );
+  filter: blur(28px);
+  opacity: 0.84;
+  mix-blend-mode: multiply;
+}
+
+.hero-carousel__eyebrow {
+  margin: 0 0 10px;
+  color: var(--teal-blue);
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.hero-carousel__title {
+  margin: 0 0 12px;
+  font-size: clamp(2.1rem, 4vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  white-space: pre-line;
+  text-wrap: balance;
+  text-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.65),
+    0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.hero-carousel__subtitle {
+  max-width: 58ch;
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.5;
+  font-weight: 700;
+  white-space: pre-line;
+  text-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.72),
+    0 0 3px rgba(0, 0, 0, 0.42);
+}
+
+.hero-carousel__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-carousel__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: var(--font);
+  font-size: 0.98rem;
+  font-weight: 900;
+  line-height: 1;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.hero-carousel__cta:hover {
+  transform: translateY(-1px);
+}
+
+.hero-carousel__cta--primary {
+  color: var(--ink);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
+.hero-carousel__cta--primary:hover {
+  background: linear-gradient(180deg, #ffd24a, #f9c638);
+}
+
+.hero-carousel__cta--secondary {
+  color: var(--text);
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.hero-carousel__cta--secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(245, 232, 205, 0.28);
+}
+
+.hero-carousel__arrow {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.14s ease,
+    background 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+.hero-carousel__arrow:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(245, 232, 205, 0.28);
+}
+
+.hero-carousel__dots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.hero-carousel__dot {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(245, 232, 205, 0.2);
+  cursor: pointer;
+  transition:
+    transform 0.14s ease,
+    background 0.14s ease,
+    border-color 0.14s ease;
+}
+
+.hero-carousel__dot:hover {
+  transform: scale(1.06);
+}
+
+.hero-carousel__dot.is-active {
+  background: var(--accent);
+  border-color: rgba(255, 191, 14, 0.75);
+}
+
+.hero-carousel__hint {
+  margin-top: 10px;
+  color: rgba(253, 244, 225, 0.7);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hero-carousel[data-slide="momentum"] {
+  --hero-bg-pos: 62% 44%;
+}
+
+.hero-carousel[data-slide="support"] {
+  --hero-bg-pos: 50% 42%;
+}
+
+.hero-carousel[data-slide="trust"] {
+  --hero-bg-pos: 78% 42%;
+}
+
+.hero-carousel[data-slide="flow"] {
+  --hero-bg-pos: 72% 46%;
+}
+
+@media (max-width: 900px) {
+  .hero-carousel {
+    height: clamp(420px, 66vh, 620px);
+    border-radius: 20px;
+  }
+
+  .hero-carousel__inner {
+    padding: 52px 18px;
+  }
+
+  .hero-carousel__subtitle {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-carousel {
+    height: clamp(460px, 72vh, 660px);
+    margin: 0 0 22px;
+    border-radius: 18px;
+  }
+
+  .hero-carousel__inner {
+    padding: 18px 14px 18px;
+  }
+
+  .hero-carousel__content {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .hero-carousel__content::before {
+    left: -84px;
+    top: auto;
+    bottom: -28px;
+    width: min(980px, 98vw);
+    height: 400px;
+    opacity: 0.92;
+    filter: blur(30px);
+  }
+
+  .hero-carousel__eyebrow {
+    font-size: 0.82rem;
+    margin-bottom: 8px;
+  }
+
+  .hero-carousel__title {
+    margin: 0 0 10px;
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+    line-height: 1.04;
+  }
+
+  .hero-carousel__subtitle {
+    max-width: 34ch;
+    margin: 0 0 16px;
+    font-size: 0.98rem;
+    line-height: 1.42;
+  }
+
+  .hero-carousel__cta {
+    min-height: 42px;
+    padding: 0 14px;
+    font-size: 0.92rem;
+  }
+
+  .hero-carousel__arrow {
+    width: 42px;
+    height: 42px;
+    font-size: 24px;
+  }
+
+  .hero-carousel__dots {
+    margin-top: 14px;
+  }
+
+  .hero-carousel__hint {
+    margin-top: 8px;
+  }
+
+  .hero-carousel__bg {
+    transition: opacity 1ms linear;
+    transform: scale(1.01);
+  }
+
+  .hero-carousel[data-slide="momentum"] {
+    --hero-bg-pos: 64% 44%;
+  }
+
+  .hero-carousel[data-slide="support"] {
+    --hero-bg-pos: 54% 40%;
+  }
+
+  .hero-carousel[data-slide="trust"] {
+    --hero-bg-pos: 82% 40%;
+  }
+
+  .hero-carousel[data-slide="flow"] {
+    --hero-bg-pos: 76% 44%;
+  }
+}

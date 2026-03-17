@@ -7,7 +7,6 @@ import "./NavBar.css";
 
 import bfLogo from "../../assets/PodFlow.png";
 
-import NavLinks from "./NavLinks";
 import MobileMenu from "./MobileMenu";
 import NotificationMenu from "./NotificationMenu";
 
@@ -190,7 +189,7 @@ function NavBar() {
       .toUpperCase();
   }, [displayName]);
 
-const badgeCount = notificationSummary?.unread_count || 0;
+  const badgeCount = notificationSummary?.unread_count || 0;
 
   return (
     <header className="navbar">
@@ -199,22 +198,91 @@ const badgeCount = notificationSummary?.unread_count || 0;
           to="/"
           className="navbar-logo"
           onClick={closeMenu}
-          aria-label="Stack Otterflows Home"
+          aria-label="PodFlow home"
         >
-          <img
-            className="navbar-logo-img"
-            src={bfLogo}
-            alt="Stack Otterflows"
-          />
+          <img className="navbar-logo-img" src={bfLogo} alt="PodFlow" />
         </Link>
 
-        <NavLinks
-          tokenExists={tokenExists}
-          createTarget={createTarget}
-          onClose={closeMenu}
-        />
+        <nav
+          className={`navbar-links ${
+            tokenExists ? "navbar-links--member" : "navbar-links--guest"
+          }`}
+          aria-label="Primary"
+        >
+          {tokenExists ? (
+            <>
+              <Link to="/dashboard" className="navbar-link" onClick={closeMenu}>
+                My Dashboard
+              </Link>
+              <Link to="/goals" className="navbar-link" onClick={closeMenu}>
+                Goals
+              </Link>
+              <Link to="/pods" className="navbar-link" onClick={closeMenu}>
+                Pods
+              </Link>
+              <Link
+                to="/connections"
+                className="navbar-link"
+                onClick={closeMenu}
+              >
+                Connections
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="navbar-link"
+                onClick={closeMenu}
+              >
+                How It Works
+              </Link>
+              <Link
+                to={createTarget}
+                className="navbar-link navbar-link--cta"
+                onClick={closeMenu}
+              >
+                Create
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/" className="navbar-link" onClick={closeMenu}>
+                Home
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="navbar-link"
+                onClick={closeMenu}
+              >
+                How It Works
+              </Link>
+            </>
+          )}
+        </nav>
 
-        <div className="navbar-actions">
+        <div
+          className={`navbar-actions ${
+            tokenExists ? "navbar-actions--member" : "navbar-actions--guest"
+          }`}
+        >
+          {!tokenExists && (
+            <>
+              <Link
+                to="/login"
+                className="navbar-link navbar-action-link navbar-action-link--login"
+                onClick={closeMenu}
+              >
+                Login
+              </Link>
+
+              <Link
+                to="/register"
+                className="navbar-link navbar-link--cta navbar-action-link navbar-action-link--signup"
+                onClick={closeMenu}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+
           {tokenExists && (
             <div className="nav-popover" ref={notificationsMenuRef}>
               <button

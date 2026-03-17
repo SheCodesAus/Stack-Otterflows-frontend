@@ -16,9 +16,9 @@
 .navbar-inner {
   position: relative;
   z-index: 3001;
-  max-width: 1100px;
+  max-width: var(--site-max);
   margin: 0 auto;
-  padding: 8px 16px;
+  padding: 10px var(--site-pad);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -39,7 +39,7 @@
   flex: 0 0 auto;
   min-width: 0;
   height: 42px;
-  margin-right: -8px;
+  margin-right: 4px;
   text-decoration: none;
   line-height: 1;
 }
@@ -47,9 +47,9 @@
 .navbar-logo-img {
   display: block;
   width: auto;
-  height: 42px;
+  height: 40px;
   object-fit: contain;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* =========================
@@ -59,12 +59,19 @@
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 16px;
   flex: 1 1 auto;
   min-width: 0;
   margin-left: 4px;
   white-space: nowrap;
   overflow: visible;
+}
+
+.navbar-links--member {
+  gap: 18px;
+}
+
+.navbar-links--guest {
+  gap: 24px;
 }
 
 .navbar-link,
@@ -88,7 +95,7 @@
     border-color 0.14s ease;
 }
 
-.navbar-link:hover:not(.navbar-link--cta) {
+.navbar-link:hover:not(.navbar-link--cta):not(.navbar-action-link--login) {
   background: rgba(245, 232, 205, 0.08);
 }
 
@@ -132,9 +139,32 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
   flex: 0 0 auto;
   min-width: 0;
+}
+
+.navbar-actions--member {
+  gap: 12px;
+}
+
+.navbar-actions--guest {
+  gap: 14px;
+}
+
+.navbar-action-link {
+  flex: 0 0 auto;
+}
+
+.navbar-action-link--login {
+  padding: 0 2px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.navbar-action-link--login:hover {
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
 }
 
 .icon-btn {
@@ -523,9 +553,9 @@
 
 .mobile-panel {
   display: none;
-  max-width: 1100px;
+  max-width: var(--site-max);
   margin: 0 auto;
-  padding: 0 16px 12px;
+  padding: 0 var(--site-pad) 12px;
   position: relative;
   z-index: 3001;
 }
@@ -596,8 +626,8 @@
   .navbar-inner {
     width: 100%;
     max-width: none;
-    min-height: 64px;
-    padding: 10px 14px;
+    min-height: 72px;
+    padding: 10px var(--site-pad);
     justify-content: space-between;
   }
 
@@ -612,6 +642,10 @@
   }
 
   .navbar-links {
+    display: none;
+  }
+
+  .navbar-action-link {
     display: none;
   }
 
@@ -651,7 +685,7 @@
   }
 
   .nav-dropdown--notifications {
-    width: min(360px, calc(100vw - 32px));
+    width: min(360px, calc(100vw - (var(--site-pad) * 2)));
   }
 
   .notification-tabs {
