@@ -5,7 +5,7 @@ import { fetchNotificationSummary } from "../../api/notifications";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
 import "./NavBar.css";
 
-import bfLogo from "../../assets/react.svg";
+import bfLogo from "../../assets/PodFlow.png";
 
 import NavLinks from "./NavLinks";
 import MobileMenu from "./MobileMenu";
