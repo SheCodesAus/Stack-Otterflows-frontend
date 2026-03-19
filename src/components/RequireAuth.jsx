@@ -12,16 +12,22 @@ function RequireAuth({ children }) {
 
     async function checkAuth() {
       if (!hasToken()) {
-        if (!ignore) setStatus("unauthenticated");
+        if (!ignore) {
+          setStatus("unauthenticated");
+        }
         return;
       }
 
       try {
         await getCurrentUser();
-        if (!ignore) setStatus("authenticated");
+        if (!ignore) {
+          setStatus("authenticated");
+        }
       } catch {
         clearToken();
-        if (!ignore) setStatus("unauthenticated");
+        if (!ignore) {
+          setStatus("unauthenticated");
+        }
       }
     }
 
@@ -41,6 +47,14 @@ function RequireAuth({ children }) {
   }
 
   if (status === "unauthenticated") {
+    const intendedPath = `${location.pathname || ""}${location.search || ""}${location.hash || ""}`;
+
+    try {
+      sessionStorage.setItem("postLoginRedirect", intendedPath);
+    } catch {
+      // Ignore storage issues
+    }
+
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

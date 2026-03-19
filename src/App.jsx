@@ -23,6 +23,10 @@ import CreatePodGoalPage from "./pages/CreatePodGoalPage";
 import PodGoalDetailPage from "./pages/PodGoalDetailPage";
 import EditPodGoalPage from "./pages/EditPodGoalPage";
 import EditPodPage from "./pages/EditPodPage";
+import ClaimConnectionInvitePage from "./pages/ClaimConnectionInvitePage";
+import ConnectionSharePage from "./pages/ConnectionSharePage";
+import PodSharePage from "./pages/PodSharePage";
+import ClaimPodInvitePage from "./pages/ClaimPodInvitePage";
 
 function App() {
   return (
@@ -167,6 +171,39 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route
+          path="/connections/claim/:token"
+          element={
+            <RequireAuth>
+              <ClaimConnectionInvitePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+  path="/connections/share"
+  element={
+    <RequireAuth>
+      <ConnectionSharePage />
+    </RequireAuth>
+  }
+/>
+<Route
+  path="/pods/:podId/share"
+  element={
+    <RequireAuth>
+      <PodSharePage />
+    </RequireAuth>
+  }
+/>
+
+<Route
+  path="/pods/join/:token"
+  element={
+    <RequireAuth>
+      <ClaimPodInvitePage />
+    </RequireAuth>
+  }
+/>
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

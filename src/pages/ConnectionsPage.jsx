@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
 import "./ConnectionsPage.css";
@@ -190,6 +191,7 @@ export default function ConnectionsPage() {
   const [actingConnectionId, setActingConnectionId] = useState(null);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const navigate = useNavigate();
 
   async function loadConnections(existingUser = null, showLoader = true) {
     try {
@@ -379,6 +381,15 @@ export default function ConnectionsPage() {
             relationships that power goals and pods.
           </p>
         </div>
+        <div className="connections-intro-actions">
+    <button
+      type="button"
+      className="btn primary"
+      onClick={() => navigate("/connections/share")}
+    >
+      Share My QR Code
+    </button>
+  </div>
       </section>
 
       <section className="connections-stats-panel">

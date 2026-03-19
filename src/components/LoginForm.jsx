@@ -7,8 +7,6 @@ function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectTo = location.state?.from?.pathname || "/dashboard";
-
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -24,6 +22,23 @@ function LoginForm() {
       ...current,
       [name]: value,
     }));
+  }
+
+  function getRedirectTarget() {
+    const fromState = location.state?.from
+      ? `${location.state.from.pathname || ""}${location.state.from.search || ""}${location.state.from.hash || ""}`
+      : "";
+
+    let fromStorage = "";
+
+    try {
+      fromStorage = sessionStorage.getItem("postLoginRedirect") || "";
+      sessionStorage.removeItem("postLoginRedirect");
+    } catch {
+      // Ignore storage issues
+    }
+
+    return fromState || fromStorage || "/dashboard";
   }
 
   async function handleSubmit(event) {
@@ -52,6 +67,8 @@ function LoginForm() {
       }
 
       setToken(data.token);
+
+      const redirectTo = getRedirectTarget();
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message || "Login failed.");

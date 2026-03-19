@@ -457,6 +457,19 @@
   padding-top: 4px;
 }
 
+.btn.utility {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f3efe3;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.btn.utility:hover,
+.btn.utility:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 @media (min-width: 901px) {
   .pod-detail-side {
     position: sticky;
