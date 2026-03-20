@@ -64,7 +64,7 @@ export default function HeroCarousel() {
     () => [
       {
         key: "momentum",
-        image: "/hero/podflow-hero-1.jpg",
+        image: "/hero/podflow-hero-1.png",
         eyebrow: "PodFlow",
         title: {
           desktop: "Keep your goals moving\nwith people who care.",
@@ -79,7 +79,7 @@ export default function HeroCarousel() {
       },
       {
         key: "support",
-        image: "/hero/podflow-hero-2.jpg",
+        image: "/hero/podflow-hero-2.png",
         eyebrow: "Shared accountability",
         title: {
           desktop: "Small steps.\nReal follow-through.",
