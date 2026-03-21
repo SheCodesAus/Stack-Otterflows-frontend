@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function buildUrl(path = "") {
   const base = API_URL.endsWith("/") ? API_URL : `${API_URL}/`;
-  return `${base}${path.replace(/^\//, "")}`;
+  return `${base}api/${path.replace(/^\//, "")}`;
 }
 
 export async function authFetch(path, options = {}) {
