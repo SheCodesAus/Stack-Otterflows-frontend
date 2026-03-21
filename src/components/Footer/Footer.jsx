@@ -1,10 +1,10 @@
 import "./Footer.css"; // footer styles
 
 /* Images of our heads from img folder */
-import inano from "../../img/1 (1).png"; // Inano image
-import mahounda from "../../img/2 (1).png"; // Mahounda image
-import becky from "../../img/3 (1).png"; // Becky image
-import nancy from "../../img/4 (1).png"; // Nancy image
+import inano from "../../../img/1 (1).png"; // Inano image
+import mahounda from "../../../img/2 (1).png"; // Mahounda image
+import becky from "../../../img/3 (1).png"; // Becky image
+import nancy from "../../../img/4 (1).png"; // Nancy image
 
 import { Link } from "react-router-dom"; // (not used here but available if needed)
 
