@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import getCurrentUser from "../../api/getCurrentUser";
 import { fetchNotificationSummary } from "../../api/notifications";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
-import '../NavBar/NavBar.css'
+import './NavBar.css'
 import bfLogo from "../../assets/PodFlow.png";
 
 import MobileMenu from "./MobileMenu";
