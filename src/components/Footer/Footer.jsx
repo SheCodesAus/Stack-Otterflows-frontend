@@ -65,17 +65,12 @@ export default function Footer() {
               <img src={nancy} alt="nancy" />
             </a>
 
+            <span>© {year} PodFlow Team</span> {/* dynamic year */}
+
           </div>
         </div>
       </div>
 
-      {/* Copyright bar */}
-      <div className="bf-footer__bottom">
-        <div className="bf-footer__bottomInner">
-          <span>© {year} PodFlow Team</span> {/* dynamic year */}
-          <span className="bf-footer__sep" aria-hidden="true">•</span>
-        </div>
-      </div>
     </footer>
   );
 }

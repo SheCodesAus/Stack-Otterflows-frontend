@@ -11,6 +11,18 @@
   box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.16);
 }
 
+.bf-footer__iconMinimal img {
+  width: 100%;          /* fill full circle width */
+  height: 100%;         /* fill full circle height */
+  object-fit: cover;    /* crop nicely instead of stretching */
+  border-radius: 50%;   /* keep it circular */
+  display: block;
+}
+
+.bf-footer__iconMinimal {
+  overflow: hidden;   /* prevents image overflow */
+}
+
 /* Inner wrapper to control max width and spacing */
 .bf-footer__inner {
   max-width: var(--content-max);
