@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 import "./LoginPage.css";
 
@@ -16,7 +17,7 @@ function LoginPage() {
 
         <footer className="login-footer">
           <p className="login-help">
-            Need an account? <a href="/register">Sign up</a>
+            Need an account? <Link to="/register">Sign up</Link>
           </p>
         </footer>
       </section>
