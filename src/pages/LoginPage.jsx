@@ -17,7 +17,7 @@ function LoginPage() {
 
         <footer className="login-footer">
           <p className="login-help">
-            Need an account? <Link to="register">Sign up</Link>
+            Need an account? <Link to="/register">Sign up</Link>
           </p>
         </footer>
       </section>
