@@ -1,84 +1,153 @@
-import "./HeroCarousel.css";
 import "./ContentMeet.css";
-import choose_path_1 from "../assets/choose_path_1.png";
-import invite_people_1 from "../assets/invite_people_1.png";
-import chek_in_1 from "../assets/check_in_1.png";
-import keep_moving_2 from "../assets/keep_moving_2.png";
-import people_using_app_1 from "../assets/people_using_app_1.png";
-import goals_1 from "../assets/goals_1.png";
+
+import goalScreen from "../assets/home/path-goal-screen.png";
+import podScreen from "../assets/home/path-pod-screen.png";
+import inviteScreen from "../assets/home/path-invite-screen.png";
+import wideShowcase from "../assets/home/podflow-wide.png";
 
 export default function ContentMeet() {
   return (
-    <section>
-     <h1 className="home-page__title">Choose your path</h1>
-        <p className="home-page__lead">
+    <div className="home-sections">
+      <section className="home-section home-section--paths">
+        <div className="section-heading">
+          <h2 className="section-heading__title">Choose your path</h2>
+          <p className="section-heading__text">
             Set a personal goal, create a private Pod, or invite your people.
-        </p>
-      <div className="row">
-         <div className="column">
-            <div className="card">
-            <img src={goals_1} alt="Jane" style={{ width: "100%" }} />
-            <div className="container">
-                <h2>Set a personal goal</h2>
-                <p className="title">Check in & Achieve</p>
-                <p>This is where your journey begins.</p>
-                <p>Define the change you want to make and turn it into a clear, achievable goal.</p>
-            </div>
-            </div>
-         </div>
-         <div className="column">
-            <div className="card">
-            <img src={goals_1} alt="Jane" style={{ width: "100%" }} />
-            <div className="container">
-                <h2>Create a private Pod</h2>
-                <p className="title">goals & groups</p>
-                <p>Your private pod is your safe space.</p>
-                <p>Build a small, trusted circle where you can grow together.</p>
-            </div>
-            </div>
-         </div>
-         <div className="column">
-            <div className="card">
-            <img src={goals_1} alt="Jane" style={{ width: "100%" }} />
-            <div className="container">
-                <h2>Invite your people</h2>
-                <p className="title">family & friends</p>
-                <p>Bring in the people who lift you up.</p>
-                <p>Invite friends, family, or teammates who inspire you, keep you accountable.</p>
-            </div>
-            </div>
-         </div>
-      </div>
-       <h1 className="home-page__title">Why it helps</h1>
-        <p className="home-page__lead">
-            Gentle guidance and support.
-        </p>
-        <div className="row_why"> 
-            <div className="column_why">
-               <img src={choose_path_1} style={{ width: "100%", height: "212px", objectFit: "cover" }} /> 
-            </div>
-            <div className="column_why">
-               <img src={invite_people_1} style={{ width: "100%", height: "212px", objectFit: "cover" }} /> 
-            </div>
-            <div className="column_why">
-               <img src={chek_in_1} style={{ width: "100%", height: "212px", objectFit: "cover" }} /> 
-            </div>
-             <div className="column_why">
-               <img src={keep_moving_2} style={{ width: "100%", height: "212px", objectFit: "cover" }} />
-            </div>
+          </p>
         </div>
-        <h1 className="home-page__title">A calmer way to keep your goals on track</h1>
-        <p className="home-page__lead">
-            A private space for your own goals, or share motivation.
-        </p>
-         <div> 
-           <img
-            id="peopleUsingApp"
-            src={people_using_app_1}
-            alt="Nature"
-            className="responsive_image"
+
+        <div className="path-grid">
+          <article className="panel panel--path">
+            <div className="device-frame device-frame--phone">
+              <img
+                src={goalScreen}
+                alt="PodFlow screen showing a personal goal"
+                className="device-frame__image"
+              />
+            </div>
+
+            <div className="panel__body">
+              <p className="panel__eyebrow">Check in &amp; achieve</p>
+              <h3 className="panel__title">Set a personal goal</h3>
+              <p className="panel__text">
+                Define a clear goal, track your progress, and build momentum one
+                step at a time.
+              </p>
+            </div>
+          </article>
+
+          <article className="panel panel--path">
+            <div className="device-frame device-frame--phone">
+              <img
+                src={podScreen}
+                alt="PodFlow screen showing a private pod"
+                className="device-frame__image"
+              />
+            </div>
+
+            <div className="panel__body">
+              <p className="panel__eyebrow">Goals &amp; groups</p>
+              <h3 className="panel__title">Create a private Pod</h3>
+              <p className="panel__text">
+                Build a small trusted space where you can grow together with
+                shared support and accountability.
+              </p>
+            </div>
+          </article>
+
+          <article className="panel panel--path">
+            <div className="device-frame device-frame--phone">
+              <img
+                src={inviteScreen}
+                alt="PodFlow screen showing invites or connections"
+                className="device-frame__image"
+              />
+            </div>
+
+            <div className="panel__body">
+              <p className="panel__eyebrow">Family &amp; friends</p>
+              <h3 className="panel__title">Invite your people</h3>
+              <p className="panel__text">
+                Bring in the people who lift you up, keep you accountable, and
+                celebrate your progress.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section className="home-section home-section--features">
+        <div className="section-heading">
+          <h2 className="section-heading__title">Why it works</h2>
+          <p className="section-heading__text">
+            Gentle structure, trusted support, and visible momentum.
+          </p>
+        </div>
+
+        <div className="feature-grid">
+          <article className="panel panel--feature">
+            <div className="feature-icon" aria-hidden="true">
+              🔒
+            </div>
+            <h3 className="panel__title panel__title--feature">Private by choice</h3>
+            <p className="panel__text">
+              Your goals stay with the people you choose, not the whole world.
+            </p>
+          </article>
+
+          <article className="panel panel--feature">
+            <div className="feature-icon" aria-hidden="true">
+              🫶
+            </div>
+            <h3 className="panel__title panel__title--feature">Support that feels human</h3>
+            <p className="panel__text">
+              Invite friends, family, or teammates who genuinely want to see you do well.
+            </p>
+          </article>
+
+          <article className="panel panel--feature">
+            <div className="feature-icon" aria-hidden="true">
+              ✅
+            </div>
+            <h3 className="panel__title panel__title--feature">Regular check-ins</h3>
+            <p className="panel__text">
+              Share wins, blocks, and progress without losing your rhythm.
+            </p>
+          </article>
+
+          <article className="panel panel--feature">
+            <div className="feature-icon" aria-hidden="true">
+              🌱
+            </div>
+            <h3 className="panel__title panel__title--feature">Momentum over pressure</h3>
+            <p className="panel__text">
+              Stay moving with encouragement, visibility, and steady follow-through.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className="home-section home-section--closing">
+        <div className="section-heading">
+          <h2 className="section-heading__title">
+            A calmer way to keep your goals on track
+          </h2>
+          <p className="section-heading__text">
+            A private space for your own goals, or shared motivation with people
+            who want to see you thrive.
+          </p>
+        </div>
+
+        <div className="closing-showcase">
+          <div className="device-frame device-frame--landscape">
+            <img
+              src={wideShowcase}
+              alt="PodFlow wide showcase image"
+              className="device-frame__image"
             />
-         </div>
-    </section>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
