@@ -185,9 +185,10 @@
 }
 
 .pod-members-page {
-  padding: 28px 0 56px;
+  padding: 28px 16px 56px;
   display: grid;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 .pod-members-page .btn {
@@ -446,7 +447,10 @@
   }
 
   .pod-members-page {
-    gap: 16px;
+  padding: 24px 16px 40px;
+  gap: 16px;
+  overflow-x: clip;
+  box-sizing: border-box;
   }
 
   .pod-members-header h1 {
@@ -532,7 +536,7 @@
 }
 
 .pod-members-intro .pod-card {
-  padding: 28px 24px 24px;
+  padding: 18px 16px 20px;
 }
 
 .pod-members-intro .pod-card__header {
