@@ -1,76 +1,66 @@
-import "./Footer.css"; // footer styles
+import "./Footer.css";
 
-/* Images of our heads from img folder */
-import inano from "../../../img/1 (1).png"; // Inano image
-import mahounda from "../../../img/2 (1).png"; // Mahounda image
-import becky from "../../../img/3 (1).png"; // Becky image
-import nancy from "../../../img/4 (1).png"; // Nancy image
-
-import { Link } from "react-router-dom"; // (not used here but available if needed)
+import inano from "../../../img/1 (1).png";
+import mahounda from "../../../img/2 (1).png";
+import becky from "../../../img/3 (1).png";
+import nancy from "../../../img/4 (1).png";
 
 export default function Footer() {
-  const year = new Date().getFullYear(); // current year
+  const year = new Date().getFullYear();
 
   return (
     <footer className="bf-footer">
       <div className="bf-footer__inner">
-        <div className="bf-footer__loveRow">
-          {/* Footer message */}
-          <p className="bf-footer__loveText">Made with a whole OTTER love</p>
+        <p className="bf-footer__loveText">Made with a whole OTTER love</p>
 
-          {/* Team member links */}
-          <div className="bf-footer__socialMinimal" aria-label="Social links">
-            
-            <a
-              className="bf-footer__iconMinimal"
-              href="https://www.linkedin.com/in/inanoknowles/" // LinkedIn profile
-              target="_blank" // open in new tab
-              rel="noopener noreferrer" // security best practice
-              aria-label="inano"
-              title="inano"
-            >
-              <img src={inano} alt="inano" /> {/* profile image */}
-            </a>
+        <div className="bf-footer__socialMinimal" aria-label="Team links">
+          <a
+            className="bf-footer__iconMinimal"
+            href="https://www.linkedin.com/in/inanoknowles/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Inano"
+            title="Inano"
+          >
+            <img src={inano} alt="Inano" />
+          </a>
 
-            <a
-              className="bf-footer__iconMinimal"
-              href="https://www.linkedin.com/in/mahounda-poinsonnet-971a4115/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="mahounda"
-              title="mahounda"
-            >
-              <img src={mahounda} alt="mahounda" />
-            </a>
+          <a
+            className="bf-footer__iconMinimal"
+            href="https://www.linkedin.com/in/mahounda-poinsonnet-971a4115/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Mahounda"
+            title="Mahounda"
+          >
+            <img src={mahounda} alt="Mahounda" />
+          </a>
 
-            <a
-              className="bf-footer__iconMinimal"
-              href="https://www.linkedin.com/in/rebecca-c-52141625/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="becky"
-              title="becky"
-            >
-              <img src={becky} alt="becky" />
-            </a>
+          <a
+            className="bf-footer__iconMinimal"
+            href="https://www.linkedin.com/in/rebecca-c-52141625/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Becky"
+            title="Becky"
+          >
+            <img src={becky} alt="Becky" />
+          </a>
 
-            <a
-              className="bf-footer__iconMinimal"
-              href="https://www.linkedin.com/in/nancyvalentind/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="nancy"
-              title="nancy"
-            >
-              <img src={nancy} alt="nancy" />
-            </a>
-
-            <span>© {year} PodFlow Team</span> {/* dynamic year */}
-
-          </div>
+          <a
+            className="bf-footer__iconMinimal"
+            href="https://www.linkedin.com/in/nancyvalentind/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Nancy"
+            title="Nancy"
+          >
+            <img src={nancy} alt="Nancy" />
+          </a>
         </div>
-      </div>
 
+        <p className="bf-footer__copyright">© {year} PodFlow Team</p>
+      </div>
     </footer>
   );
 }

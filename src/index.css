@@ -14,6 +14,11 @@ body,
   padding: 0;
   width: 100%;
   background: var(--bg);
+  min-height: 100%;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* Optional: set your base font + background */
@@ -57,14 +62,14 @@ a {
 ========================= */
 
 .page {
-  position: relative; /* anchor overlays */
-}
-
-/* Make sure overlays sit behind content */
-.page {
+min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   position: relative;
   isolation: isolate;
 }
+
+
 
 /* Keep page content above decorative overlays,
    but do NOT force the navbar into the same layer */
@@ -85,6 +90,14 @@ a {
   background:
     radial-gradient(1200px 600px at 50% 0%, rgba(250, 187, 76, 0.14), transparent 60%),
     radial-gradient(900px 520px at 0% 100%, rgba(246, 165, 81, 0.10), transparent 55%);
+}
+
+/* Main content should take available space */
+.app-main {
+  width: 100%;
+  flex: 1 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 /* Optional top mist for dark hero images (full width, linear) */
@@ -126,4 +139,11 @@ a {
     rgba(0, 0, 0, 0),
     rgba(0, 0, 0, 0.22)
   );
+}
+
+/* Footer should stay natural height */
+.page > footer {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }

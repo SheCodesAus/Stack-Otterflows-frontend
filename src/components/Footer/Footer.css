@@ -1,174 +1,115 @@
-/* Main footer container */
 .bf-footer {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-
   margin-top: 0;
   border-top: 1px solid var(--line);
-
-  /* Subtle shadow for separation from page content */
   box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.16);
 }
 
-.bf-footer__iconMinimal img {
-  width: 100%;          /* fill full circle width */
-  height: 100%;         /* fill full circle height */
-  object-fit: cover;    /* crop nicely instead of stretching */
-  border-radius: 50%;   /* keep it circular */
-  display: block;
-}
-
-.bf-footer__iconMinimal {
-  overflow: hidden;   /* prevents image overflow */
-}
-
-/* Inner wrapper to control max width and spacing */
 .bf-footer__inner {
   max-width: var(--content-max);
   margin: 0 auto;
   padding: 1rem;
-}
-
-/* Layout for text + icons (mobile-first: stacked vertically) */
-.bf-footer__loveRow {
   display: flex;
-  flex-direction: column; /* stack on mobile */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
+  gap: 0.85rem;
   text-align: center;
 }
 
-/* Main footer message */
-.bf-footer__loveText {
+.bf-footer__loveText,
+.bf-footer__copyright {
   margin: 0;
-  font-size: 1rem;
   line-height: 1.3;
+}
+
+.bf-footer__loveText {
+  font-size: 1rem;
   font-weight: 900;
   color: rgba(253, 244, 225, 0.92);
   letter-spacing: 0.2px;
 }
 
-/* Social icons container */
+.bf-footer__copyright {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: rgba(253, 244, 225, 0.78);
+}
+
 .bf-footer__socialMinimal {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap; /* wrap on smaller screens if needed */
+  gap: 0.7rem;
+  flex-wrap: wrap;
 }
 
-/* Individual icon button (circular) */
 .bf-footer__iconMinimal {
   width: 2.2rem;
   height: 2.2rem;
-
-  display: grid;
-  place-items: center;
-
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: block;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(245, 232, 205, 0.14);
-
-  /* Smooth hover animation */
   transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
 }
 
-/* Hover state for icons */
 .bf-footer__iconMinimal:hover {
   background: rgba(245, 232, 205, 0.08);
   border-color: rgba(250, 187, 76, 0.24);
   transform: translateY(-1px);
 }
 
-/* Active (click) state */
 .bf-footer__iconMinimal:active {
   transform: translateY(0);
 }
 
-/* Icon image inside button */
 .bf-footer__iconMinimal img {
-  width: 1rem;
-  height: 1rem;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
   display: block;
 }
 
-/* Bottom copyright bar */
-.bf-footer__bottom {
-  border-top: 1px solid rgba(245, 232, 205, 0.12);
-  margin-top: 1rem;
-}
-
-/* Bottom content layout */
-.bf-footer__bottomInner {
-  max-width: var(--content-max);
-  margin: 0 auto;
-  padding: 0.85rem 1rem 1rem;
-
-  display: flex;
-  justify-content: center;
-  text-align: center;
-
-  color: rgba(253, 244, 225, 0.78);
-  font-weight: 750;
-  font-family: var(--font);
-  font-size: 0.95rem;
-}
-
-/* Tablet breakpoint */
 @media (min-width: 640px) {
   .bf-footer__inner {
-    padding: 1.2rem 1.25rem 1rem;
-  }
-
-  /* Switch from stacked to horizontal layout */
-  .bf-footer__loveRow {
+    padding: 1rem 1.25rem;
     flex-direction: row;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem 1.25rem;
   }
 
   .bf-footer__loveText {
-    font-size: 1.08rem;
+    font-size: 1.05rem;
   }
 
   .bf-footer__iconMinimal {
-    width: 2.4rem;
-    height: 2.4rem;
-  }
-
-  .bf-footer__iconMinimal img {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 2.35rem;
+    height: 2.35rem;
   }
 }
 
-/* Desktop breakpoint */
 @media (min-width: 960px) {
   .bf-footer__inner {
-    padding: 1.35rem 1.5rem 1.1rem;
+    padding: 1.1rem 1.5rem;
+    justify-content: center;
   }
 
   .bf-footer__loveText {
-    font-size: 1.12rem;
+    font-size: 1.1rem;
   }
 
   .bf-footer__socialMinimal {
-    gap: 0.85rem;
+    gap: 0.8rem;
   }
 
   .bf-footer__iconMinimal {
     width: 2.5rem;
     height: 2.5rem;
-  }
-
-  .bf-footer__iconMinimal img {
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-
-  .bf-footer__bottomInner {
-    padding: 0.95rem 1.5rem 1.1rem;
   }
 }
