@@ -1,7 +1,8 @@
 .pod-detail-page {
-  padding: 28px 0 56px;
+  padding: 28px 16px 56px;
   display: grid;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 .pod-detail-topbar {
@@ -478,6 +479,13 @@
 }
 
 @media (max-width: 900px) {
+  .pod-detail-page {
+    padding: 24px 16px 40px;
+    gap: 16px;
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
   .pod-detail-grid {
     grid-template-columns: 1fr;
   }
@@ -488,10 +496,6 @@
 }
 
 @media (max-width: 760px) {
-  .pod-detail-page {
-    gap: 16px;
-  }
-
   .pod-detail-hero,
   .pod-card {
     padding: 16px;
@@ -504,7 +508,13 @@
   }
 
   .pod-detail-hero__actions .btn,
-  .pod-goal-item__actions .btn {
+  .pod-goal-item__actions .btn,
+  .pod-empty-state .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .pod-goal-item__actions {
     width: 100%;
   }
 
@@ -557,8 +567,12 @@
     font-size: 1.08rem;
   }
 
-  .pod-card__actions--center .btn {
+  .pod-card__actions--center .btn,
+  .pod-empty-state {
     width: 100%;
-    min-width: 0;
+  }
+
+  .pod-empty-state {
+    justify-items: stretch;
   }
 }

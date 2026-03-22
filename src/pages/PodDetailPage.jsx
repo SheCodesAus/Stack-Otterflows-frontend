@@ -310,18 +310,18 @@ export default function PodDetailPage() {
         </p>
 
         <div className="pod-detail-hero__actions">
-  <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
-    Create Pod Goal
-  </Link>
+          <Link to={`/pods/${pod.id}/goals/new`} className="btn primary">
+            Create Pod Goal
+          </Link>
 
-  <Link to={`/pods/${pod.id}/share`} className="btn secondary">
-    Share Pod QR
-  </Link>
+          <Link to={`/pods/${pod.id}/share`} className="btn secondary">
+            Share Pod QR
+          </Link>
 
-  <Link to={`/pods/${pod.id}/edit`} className="btn utility">
-    Edit Pod
-  </Link>
-</div>
+          <Link to={`/pods/${pod.id}/edit`} className="btn utility">
+            Edit Pod
+          </Link>
+        </div>
       </header>
 
       <section className="pod-detail-grid">
@@ -498,7 +498,10 @@ export default function PodDetailPage() {
               <h2 className="pod-card__title pod-card__title--accent">
                 Pod Overview
               </h2>
-              <p>See who created this pod, when it started, and who helps manage it.</p>
+              <p>
+                See who created this pod, when it started, and who helps manage
+                it.
+              </p>
             </div>
 
             <div className="pod-details-panel">
