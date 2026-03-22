@@ -46,6 +46,15 @@ function formatShortDate(value) {
   });
 }
 
+const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
+function getMediaUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${API_BASE}${path}`;
+}
+
 function formatDateTime(value) {
   if (!value) return "—";
   const date = new Date(value);
@@ -399,7 +408,7 @@ function buildActivityFeed(goal, checkins, comments) {
       title: `${createdBy} submitted a check-in`,
       meta: formatCheckInValue(goal, checkin),
       note: checkin.note || "",
-      proof: checkin.proof || "",
+      proof: getMediaUrl(checkin.proof || ""),
     });
 
     if (checkin.status === "APPROVED" && checkin.verified_at) {
@@ -1077,6 +1086,9 @@ export default function PodGoalDetailPage() {
       formData.append("note", checkInNote.trim());
 
       if (checkInProof) {
+        console.log("checkInProof:", checkInProof);
+        console.log("is File:", checkInProof instanceof File);
+        console.log("name:", checkInProof?.name);
         formData.append("proof", checkInProof);
       }
 
