@@ -251,8 +251,7 @@
 
 /* =========================
    PODS
-   Desktop stays simple.
-   Mobile stays compact.
+   Keep pod meta on one line when space allows
    ========================= */
 
 .dashboard-panel--pods .dashboard-row--pod {
@@ -263,17 +262,26 @@
 .dashboard-panel--pods .dashboard-row--pod .dashboard-row__content {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
 }
 
 .dashboard-panel--pods .dashboard-row--pod .dashboard-goal-title {
+  flex: 0 0 100%;
   text-align: left;
+  margin-bottom: 0;
 }
 
-.pod-chip-row {
+.pod-chip-row,
+.pod-stats-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 6px;
+  align-items: center;
+  gap: 8px 14px;
+  width: auto;
+  margin: 0;
 }
 
 .pod-chip--category {
@@ -289,14 +297,6 @@
 
 .pod-chip--status.is-inactive {
   color: rgba(245, 232, 205, 0.72);
-}
-
-.pod-stats-grid {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 18px;
-  width: auto;
 }
 
 .pod-stat-card {
@@ -527,19 +527,30 @@
 
   .dashboard-panel--pods .dashboard-row--pod .dashboard-row__content {
     width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
   }
 
   .dashboard-panel--pods .dashboard-row--pod .dashboard-goal-title {
     margin-bottom: 8px;
+     flex: 0 0 100%;
   }
 
   .pod-chip-row {
     margin-bottom: 8px;
+    width: auto;
+  margin: 0;
+  gap: 8px 14px;
   }
 
   .pod-stats-grid {
     width: 100%;
     gap: 8px 14px;
+    width: auto;
+  margin: 0;
+  gap: 8px 14px;
   }
 
   .pod-stat-card__label,
