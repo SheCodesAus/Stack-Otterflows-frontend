@@ -1,46 +1,123 @@
-/* .articles-container  */
- @media (min-width: 768px) {
-   .articles-container {
-     display: flex;
-   }
- }
+.how-it-works-page {
+  padding: 28px 16px 56px;
+  display: grid;
+  gap: 20px;
+  box-sizing: border-box;
+}
 
-  article {
-   padding: 32px 16px;
-   border: 1px solid var(--panel-border);
-   background: rgba(255, 255, 255, 0.03);
-   border-radius: 10px;
-   margin: 5px 10px;
-   transition: all 0.3s ease;
- }
+.how-it-works-intro,
+.articles-container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.how-it-works-intro {
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  padding: 24px;
+}
+
+.how-it-works-intro h1 {
+  margin: 0 0 12px;
+  color: var(--text);
+}
+
+.how-it-works-intro p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.how-it-works-intro p:last-child {
+  margin-bottom: 0;
+}
+
+.how-it-works-accent {
+  color: #2ecc9f;
+}
+
+.how-it-works-highlight {
+  color: #6c63ff;
+}
+
+.articles-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.how-it-works-card {
+  padding: 24px 18px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.how-it-works-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.how-it-works-card .icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 0 14px;
+  display: block;
+}
+
+.how-it-works-card h2 {
+  margin: 0 0 14px;
+  color: #2ecc9f;
+  line-height: 1.2;
+}
+
+.how-it-works-card p {
+  margin: 0 0 14px;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.how-it-works-card p:last-child {
+  margin-bottom: 0;
+}
 
 @media (min-width: 768px) {
-   article {
-       padding: 56px;
-   }
- }
- 
- article:hover {
-   background-color: var(--base-light);
- }
- 
-  article .article-heading {
-   display: flex;
-   justify-content: flex-start;
- }
+  .articles-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
 
- article .icon {
-   width: 60px;
-   height: 60px;
-   margin-left: 10px;
-   margin-right: 10px;
- }
- 
- article .article-heading h2 {
-   margin-bottom: 16px;
-   color: var(--base-dark);
- }
- 
- article p {
-   margin-bottom: 16px;
- }
+  .how-it-works-card {
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .how-it-works-page {
+    padding: 24px 16px 40px;
+    gap: 16px;
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
+  .how-it-works-intro {
+    padding: 20px 16px;
+    border-radius: 24px;
+  }
+
+  .how-it-works-card {
+    padding: 20px 16px;
+    border-radius: 22px;
+  }
+
+  .how-it-works-card .icon {
+    width: 54px;
+    height: 54px;
+    margin-bottom: 12px;
+  }
+}
