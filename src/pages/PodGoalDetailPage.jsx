@@ -495,14 +495,22 @@ function canAddCheckIn(goal) {
 
   const today = startOfToday(new Date());
 
-  if (goal.status === "PLANNED") {
+if (goal.status === "PLANNED") {
+  if (goal.start_date) {
+    const startDate = startOfToday(goal.start_date);
+    if (startDate > today) {
+      return {
+        allowed: false,
+        reason: `Check-ins open on ${formatDate(goal.start_date)}.`,
+      };
+    }
+  } else {
     return {
       allowed: false,
-      reason: goal.start_date
-        ? `Check-ins open on ${formatDate(goal.start_date)}.`
-        : "This goal has not started yet.",
+      reason: "This goal has not started yet.",
     };
   }
+}
 
   if (goal.status === "PAUSED") {
     return {

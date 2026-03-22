@@ -60,12 +60,6 @@ function getBuddyStatusClass(status) {
   }
 }
 
-function getPodStatusClass(isActive) {
-  return isActive
-    ? "dashboard-goal-meta__value--approved"
-    : "dashboard-goal-meta__value--empty";
-}
-
 function formatBuddyLabel(name, status) {
   const cleanName = name?.trim();
   const cleanStatus = humanizeEnum(status);
@@ -509,74 +503,76 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <section className="dashboard-panel">
-        <div className="dashboard-panel__header">
-          <h2>My Pods</h2>
-          <Link to="/pods" className="btn link">
-            View all ({pods.length})
-          </Link>
-        </div>
+<section className="dashboard-panel dashboard-panel--pods">
+  <div className="dashboard-panel__header">
+    <h2>My Pods</h2>
+    <Link to="/pods" className="btn link">
+      View all ({pods.length})
+    </Link>
+  </div>
 
-        {loading ? (
-          <p className="dashboard-state">Loading pods...</p>
-        ) : visiblePods.length === 0 ? (
-          <p className="dashboard-state">
-            No pods yet. Create one when you’re ready.
-          </p>
-        ) : (
-          <div className="dashboard-list">
-            {visiblePods.map((pod) => {
-              const category = categoryMap[pod.category] || categoryMap.OTHER;
+  {loading ? (
+    <p className="dashboard-state">Loading pods...</p>
+  ) : visiblePods.length === 0 ? (
+    <p className="dashboard-state">
+      No pods yet. Create one when you’re ready.
+    </p>
+  ) : (
+    <div className="dashboard-list">
+      {visiblePods.map((pod) => {
+        const category = categoryMap[pod.category] || categoryMap.OTHER;
 
-              return (
-                <article key={pod.id} className="dashboard-row">
-                  <div className="dashboard-row__content">
-                    <h3 className="dashboard-goal-title">{pod.name}</h3>
+        return (
+          <article key={pod.id} className="dashboard-row dashboard-row--pod">
+            <div className="dashboard-row__content">
+              <h3 className="dashboard-goal-title">{pod.name}</h3>
 
-                    <div className="dashboard-goal-meta">
-                      <span className="dashboard-goal-meta__item dashboard-goal-meta__item--category">
-                        <span className="dashboard-goal-meta__icon" aria-hidden="true">
-                          {category.icon}
-                        </span>
-                        <span>{category.label}</span>
-                      </span>
+              <div className="pod-chip-row">
+                <span className="pod-chip pod-chip--category">
+                  <span className="dashboard-goal-meta__icon" aria-hidden="true">
+                    {category.icon}
+                  </span>
+                  <span>{category.label}</span>
+                </span>
 
-                      <span className="dashboard-goal-meta__item">
-                        <span className="dashboard-goal-meta__label">Status:</span>
-                        <span
-                          className={`dashboard-goal-meta__value ${getPodStatusClass(
-                            pod.isActive
-                          )}`}
-                        >
-                          {pod.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </span>
+                <span
+                  className={`pod-chip pod-chip--status ${
+                    pod.isActive ? "is-active" : "is-inactive"
+                  }`}
+                >
+                  {pod.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
 
-                      <span className="dashboard-goal-meta__item">
-                        <span className="dashboard-goal-meta__label">Pod goals:</span>
-                        <span className="dashboard-goal-meta__value">
-                          {pod.activePodGoalsCount} active
-                        </span>
-                      </span>
+              <div className="pod-stats-grid">
+                <div className="pod-stat-card">
+                  <span className="pod-stat-card__label">Pod goals</span>
+                  <strong className="pod-stat-card__value">
+                    {pod.activePodGoalsCount} active
+                  </strong>
+                </div>
 
-                      <span className="dashboard-goal-meta__item">
-                        <span className="dashboard-goal-meta__label">Members:</span>
-                        <span className="dashboard-goal-meta__value">
-                          {pod.memberCount}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
+                <div className="pod-stat-card">
+                  <span className="pod-stat-card__label">Members</span>
+                  <strong className="pod-stat-card__value">
+                    {pod.memberCount}
+                  </strong>
+                </div>
+              </div>
+            </div>
 
-                  <Link to={`/pods/${pod.id}`} className="btn secondary">
-                    View Pod
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+            <Link
+              to={`/pods/${pod.id}`}
+              className="btn secondary pod-row__button"
+            >
+              View Pod
+            </Link>
+          </article>
+        );
+      })}
+    </div>
+  )}
+</section>
 
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
