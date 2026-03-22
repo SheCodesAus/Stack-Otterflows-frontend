@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./HeroCarousel.css";
+import podflowLogo from "../assets/PodFlow.png";
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -65,7 +66,7 @@ export default function HeroCarousel() {
       {
         key: "momentum",
         image: "/hero/podflow-hero-1.png",
-        eyebrow: "PodFlow",
+        logo: podflowLogo,
         title: {
           desktop: "Keep your goals moving\nwith people who care.",
           mobile: "Keep your goals moving\nwith people who care.",
@@ -80,7 +81,6 @@ export default function HeroCarousel() {
       {
         key: "support",
         image: "/hero/podflow-hero-2.png",
-        eyebrow: "Shared accountability",
         title: {
           desktop: "Small steps.\nReal follow-through.",
           mobile: "Small steps.\nReal follow-through.",
@@ -95,7 +95,6 @@ export default function HeroCarousel() {
       {
         key: "trust",
         image: "/hero/podflow-hero-3.jpg",
-        eyebrow: "Progress with people you trust",
         title: {
           desktop: "Make shared goals\neasier to reach.",
           mobile: "Make shared goals\neasier to reach.",
@@ -110,7 +109,6 @@ export default function HeroCarousel() {
       {
         key: "flow",
         image: "/hero/podflow-hero-4.jpg",
-        eyebrow: "Human-first momentum",
         title: {
           desktop: "Less pressure.\nMore progress.",
           mobile: "Less pressure.\nMore progress.",
@@ -212,7 +210,13 @@ export default function HeroCarousel() {
 
       <div className="hero-carousel__inner">
         <div className="hero-carousel__content">
-          <p className="hero-carousel__eyebrow">{active.eyebrow}</p>
+          {active.logo ? (
+            <img
+              src={active.logo}
+              alt="PodFlow"
+              className="hero-carousel__logo"
+            />
+          ) : null}
 
           <h1 className="hero-carousel__title">
             {resolveText(active.title, isMobile)}
@@ -278,7 +282,6 @@ export default function HeroCarousel() {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
