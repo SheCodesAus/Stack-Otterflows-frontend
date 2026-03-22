@@ -138,9 +138,11 @@ function NavBar() {
     setMenuOpen(false);
   }
 
-  function toggleMenu() {
-    setMenuOpen((value) => !value);
-  }
+function toggleMenu() {
+  setProfileMenuOpen(false);
+  setNotificationsOpen(false);
+  setMenuOpen((value) => !value);
+}
 
   function handleLogout() {
     clearToken();
@@ -152,15 +154,17 @@ function NavBar() {
     navigate("/");
   }
 
-  function handleProfileToggle() {
-    setNotificationsOpen(false);
-    setProfileMenuOpen((value) => !value);
-  }
+function handleProfileToggle() {
+  closeMenu();
+  setNotificationsOpen(false);
+  setProfileMenuOpen((value) => !value);
+}
 
-  function handleNotificationsToggle() {
-    setProfileMenuOpen(false);
-    setNotificationsOpen((value) => !value);
-  }
+function handleNotificationsToggle() {
+  closeMenu();
+  setProfileMenuOpen(false);
+  setNotificationsOpen((value) => !value);
+}
 
   function handleProfileOpen() {
     setProfileMenuOpen(false);
