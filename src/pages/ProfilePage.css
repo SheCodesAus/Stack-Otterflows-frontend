@@ -2,6 +2,7 @@
   padding: 28px 0 56px;
   display: grid;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 .profile-page__header h1 {
@@ -127,6 +128,13 @@
 }
 
 @media (max-width: 760px) {
+  .profile-page {
+    padding: 24px 16px 40px;
+    gap: 16px;
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
   .profile-card {
     padding: 20px;
   }
