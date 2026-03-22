@@ -221,63 +221,64 @@ export default function HeroCarousel() {
           <p className="hero-carousel__subtitle">{active.subtitle}</p>
 
           <div className="hero-carousel__actions">
-            <Link
-              to={active.primaryTo}
-              className="hero-carousel__cta hero-carousel__cta--primary"
-            >
-              {active.primaryLabel}
-            </Link>
+            <div className="hero-carousel__cta-row">
+              <Link
+                to={active.primaryTo}
+                className="hero-carousel__cta hero-carousel__cta--primary"
+              >
+                {active.primaryLabel}
+              </Link>
 
-            <Link
-              to={active.secondaryTo}
-              className="hero-carousel__cta hero-carousel__cta--secondary"
-            >
-              {active.secondaryLabel}
-            </Link>
-
-            <button
-              type="button"
-              className="hero-carousel__arrow"
-              onClick={goPrev}
-              aria-label="Previous slide"
-            >
-              ‹
-            </button>
-
-            <button
-              type="button"
-              className="hero-carousel__arrow"
-              onClick={goNext}
-              aria-label="Next slide"
-            >
-              ›
-            </button>
-          </div>
-
-          <div
-            className="hero-carousel__dots"
-            role="tablist"
-            aria-label="Select hero slide"
-          >
-            {slides.map((slide, slideIndex) => (
-              <button
-                key={slide.key}
-                type="button"
-                className={`hero-carousel__dot ${
-                  slideIndex === index ? "is-active" : ""
-                }`}
-                onClick={() => goTo(slideIndex)}
-                aria-label={`Go to slide ${slideIndex + 1}`}
-                aria-current={slideIndex === index ? "true" : "false"}
-              />
-            ))}
-          </div>
-
-          {!prefersReducedMotion && (
-            <div className="hero-carousel__hint" aria-hidden="true">
-              Pauses on hover
+              <Link
+                to={active.secondaryTo}
+                className="hero-carousel__cta hero-carousel__cta--secondary"
+              >
+                {active.secondaryLabel}
+              </Link>
             </div>
-          )}
+
+            <div className="hero-carousel__nav-row">
+              <div className="hero-carousel__arrow-group">
+                <button
+                  type="button"
+                  className="hero-carousel__arrow"
+                  onClick={goPrev}
+                  aria-label="Previous slide"
+                >
+                  ‹
+                </button>
+
+                <button
+                  type="button"
+                  className="hero-carousel__arrow"
+                  onClick={goNext}
+                  aria-label="Next slide"
+                >
+                  ›
+                </button>
+              </div>
+
+              <div
+                className="hero-carousel__dots"
+                role="tablist"
+                aria-label="Select hero slide"
+              >
+                {slides.map((slide, slideIndex) => (
+                  <button
+                    key={slide.key}
+                    type="button"
+                    className={`hero-carousel__dot ${
+                      slideIndex === index ? "is-active" : ""
+                    }`}
+                    onClick={() => goTo(slideIndex)}
+                    aria-label={`Go to slide ${slideIndex + 1}`}
+                    aria-current={slideIndex === index ? "true" : "false"}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
