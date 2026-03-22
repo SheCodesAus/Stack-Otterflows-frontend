@@ -1582,86 +1582,113 @@ export default function PodGoalDetailPage() {
           </article>
 
           <article className="goal-card">
-            <div className="goal-card__header">
-              <h2>This Period Totals</h2>
-            </div>
+  <div className="goal-card__header">
+    <h2>This Period Totals</h2>
+  </div>
 
-            <div className="goal-totals-list">
-              <div className="goal-totals-row">
-                <span>Pending</span>
-                <strong>{currentPeriodPending.length}</strong>
-              </div>
-              <div className="goal-totals-row">
-                <span>Approved</span>
-                <strong>{currentPeriodApproved.length}</strong>
-              </div>
-              <div className="goal-totals-row">
-                <span>Rejected</span>
-                <strong>{currentPeriodRejected.length}</strong>
-              </div>
-              <div className="goal-totals-row">
-                <span>Total submitted</span>
-                <strong>{currentPeriodCheckins.length}</strong>
-              </div>
-            </div>
+  <div className="goal-totals-grid">
+    <div className="goal-total-card">
+      <span className="goal-total-card__label">Pending</span>
+      <strong className="goal-total-card__value">
+        {currentPeriodPending.length}
+      </strong>
+    </div>
 
-            <p className="goal-side-note">
-              Pending check-ins stay here until another pod member reviews them.
-            </p>
-          </article>
+    <div className="goal-total-card">
+      <span className="goal-total-card__label">Approved</span>
+      <strong className="goal-total-card__value">
+        {currentPeriodApproved.length}
+      </strong>
+    </div>
+
+    <div className="goal-total-card">
+      <span className="goal-total-card__label">Rejected</span>
+      <strong className="goal-total-card__value">
+        {currentPeriodRejected.length}
+      </strong>
+    </div>
+
+    <div className="goal-total-card">
+      <span className="goal-total-card__label">Total submitted</span>
+      <strong className="goal-total-card__value">
+        {currentPeriodCheckins.length}
+      </strong>
+    </div>
+  </div>
+
+  <p className="goal-side-note">
+    Pending check-ins stay here until another pod member reviews them.
+  </p>
+</article>
 
           <article className="goal-card">
-            <div className="goal-card__header">
-              <h2>Goal Details</h2>
-            </div>
+  <div className="goal-card__header">
+    <h2>Goal Details</h2>
+  </div>
 
-            <div className="goal-summary-list">
-              <div className="goal-summary-row">
-                <span>Pod</span>
-                <strong>{pod?.name || "Unknown pod"}</strong>
-              </div>
+  <div className="goal-details-grid">
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Pod</span>
+      <strong className="goal-detail-item__value">
+        {pod?.name || "Unknown pod"}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>Created by</span>
-                <strong>{goalCreatorName}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Created by</span>
+      <strong className="goal-detail-item__value">{goalCreatorName}</strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>Status</span>
-                <strong>{formatStatus(goal.status)}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Status</span>
+      <strong className="goal-detail-item__value">
+        {formatStatus(goal.status)}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>How you’re tracking it</span>
-                <strong>{formatTrackingLabel(goal.metric_type)}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">How you’re tracking it</span>
+      <strong className="goal-detail-item__value">
+        {formatTrackingLabel(goal.metric_type)}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>Frequency</span>
-                <strong>{formatFrequency(goal.period)}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Frequency</span>
+      <strong className="goal-detail-item__value">
+        {formatFrequency(goal.period)}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>Goal target</span>
-                <strong>{formatTarget(goal)}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Goal target</span>
+      <strong className="goal-detail-item__value">
+        {formatTarget(goal)}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>Start date</span>
-                <strong>{formatDate(goal.start_date)}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Start date</span>
+      <strong className="goal-detail-item__value">
+        {formatDate(goal.start_date)}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>End date</span>
-                <strong>{formatDate(goal.end_date)}</strong>
-              </div>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">End date</span>
+      <strong className="goal-detail-item__value">
+        {goal.end_date ? formatDate(goal.end_date) : "No end date"}
+      </strong>
+    </div>
 
-              <div className="goal-summary-row">
-                <span>Created</span>
-                <strong>{formatDate(goal.created_at)}</strong>
-              </div>
-            </div>
-          </article>
+    <div className="goal-detail-item">
+      <span className="goal-detail-item__label">Created</span>
+      <strong className="goal-detail-item__value">
+        {formatDate(goal.created_at)}
+      </strong>
+    </div>
+  </div>
+</article>
         </aside>
       </section>
 
