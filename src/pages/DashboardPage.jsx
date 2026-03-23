@@ -9,6 +9,7 @@ import {
   fetchPods,
   fetchPodDetail,
 } from "../api/dashboard";
+import { useNotifications } from "../hooks/useNotifications";
 import "./DashboardPage.css";
 
 const categoryMap = {
@@ -179,6 +180,8 @@ function normaliseReviewItem(notification) {
 }
 
 export default function DashboardPage() {
+  const { version: notificationsVersion } = useNotifications();
+
   const [user, setUser] = useState(null);
   const [goals, setGoals] = useState([]);
   const [supportedGoals, setSupportedGoals] = useState([]);
@@ -280,7 +283,7 @@ export default function DashboardPage() {
     }
 
     loadDashboard();
-  }, []);
+  }, [notificationsVersion]);
 
   const welcomeName =
     user?.display_name?.trim() || user?.username?.trim() || "";

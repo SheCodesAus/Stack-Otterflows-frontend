@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { fetchNotificationSummary } from "../api/notifications";
 import {
@@ -17,7 +17,12 @@ export function NotificationProvider({ children }) {
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [version, setVersion] = useState(0);
 
+  const latestRequestId = useRef(0);
+
   const refreshNotificationSummary = useCallback(async () => {
+    const requestId = latestRequestId.current + 1;
+    latestRequestId.current = requestId;
+
     if (!hasToken()) {
       setSummary(EMPTY_NOTIFICATION_SUMMARY);
       return;
@@ -27,15 +32,23 @@ export function NotificationProvider({ children }) {
       setLoadingSummary(true);
       const data = await fetchNotificationSummary();
 
+      if (latestRequestId.current !== requestId) {
+        return;
+      }
+
       setSummary({
         unread_count: Number(data?.unread_count) || 0,
         needs_review_count: Number(data?.needs_review_count) || 0,
         all_count: Number(data?.all_count) || 0,
       });
     } catch (error) {
-      console.error("Failed to refresh notification summary:", error);
+      if (latestRequestId.current === requestId) {
+        console.error("Failed to refresh notification summary:", error);
+      }
     } finally {
-      setLoadingSummary(false);
+      if (latestRequestId.current === requestId) {
+        setLoadingSummary(false);
+      }
     }
   }, []);
 
@@ -45,6 +58,7 @@ export function NotificationProvider({ children }) {
   }, [refreshNotificationSummary]);
 
   const clearNotifications = useCallback(() => {
+    latestRequestId.current += 1;
     setSummary(EMPTY_NOTIFICATION_SUMMARY);
     setVersion((value) => value + 1);
   }, []);
