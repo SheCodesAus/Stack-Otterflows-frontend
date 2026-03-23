@@ -1,4 +1,5 @@
 import HeroCarousel from "../components/HeroCarousel";
+import ContentMeet from "../components/ContentMeet";
 import "./HomePage.css";
 
 export default function Home() {
@@ -10,10 +11,7 @@ export default function Home() {
 
       <div className="home-page__inner">
         <section className="home-page__intro">
-          <h1 className="home-page__title">Podflow Content</h1>
-          <p className="home-page__lead">
-            Here is where we put our content.
-          </p>
+          <ContentMeet />
         </section>
       </div>
     </main>
