@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
+import { useNotifications } from "../hooks/useNotifications";
 import "./ConnectionsPage.css";
 
 function formatStatus(status) {
@@ -192,6 +193,7 @@ export default function ConnectionsPage() {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const navigate = useNavigate();
+  const { signalNotificationChange } = useNotifications();
 
   async function loadConnections(existingUser = null, showLoader = true) {
     try {
@@ -316,6 +318,7 @@ export default function ConnectionsPage() {
       setSearchResults((prev) => prev.filter((item) => item.id !== user.id));
       setSearchQuery("");
       setFeedback(`Invite sent to ${user.display_name || user.username}.`);
+      await signalNotificationChange();
     } catch (err) {
       setFeedback(err.message || "Could not send the connection invite.");
     } finally {
@@ -340,6 +343,7 @@ export default function ConnectionsPage() {
 
       setFeedback("Connection accepted.");
       await loadConnections(currentUser, false);
+      await signalNotificationChange();
     } catch (err) {
       setFeedback(err.message || "Could not accept the connection invite.");
     } finally {
@@ -364,6 +368,7 @@ export default function ConnectionsPage() {
 
       setFeedback("Connection declined.");
       await loadConnections(currentUser, false);
+      await signalNotificationChange();
     } catch (err) {
       setFeedback(err.message || "Could not decline the connection invite.");
     } finally {

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
+import { useNotifications } from "../hooks/useNotifications";
 
 export default function ClaimPodInvitePage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { signalNotificationChange } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -37,6 +39,7 @@ export default function ClaimPodInvitePage() {
         setMembershipId(data?.membership_id || null);
         setInviteReady(true);
         setFeedback(data?.detail || "You now have an invite to join this pod.");
+        await signalNotificationChange();
       } catch (err) {
         setError(err.message || "Could not claim this pod invite.");
       } finally {
@@ -47,7 +50,7 @@ export default function ClaimPodInvitePage() {
     if (token) {
       claimInvite();
     }
-  }, [token]);
+  }, [token, signalNotificationChange]);
 
   async function handleAccept() {
     if (!membershipId) return;
@@ -69,6 +72,7 @@ export default function ClaimPodInvitePage() {
 
       setInviteReady(false);
       setFeedback("You’ve joined the pod.");
+      await signalNotificationChange();
     } catch (err) {
       setError(err.message || "Could not accept this pod invite.");
     } finally {
@@ -96,6 +100,7 @@ export default function ClaimPodInvitePage() {
 
       setInviteReady(false);
       setFeedback("Pod invite declined.");
+      await signalNotificationChange();
     } catch (err) {
       setError(err.message || "Could not decline this pod invite.");
     } finally {

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../../api/auth-fetch";
 import {
-  fetchNotificationSummary,
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -57,44 +56,22 @@ function getPodId(notification) {
   return notification.pod_id || notification.payload_json?.pod_id || null;
 }
 
-export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
+export default function NotificationMenu({
+  open,
+  onClose,
+  summary,
+  onSummaryRefresh,
+  onNotificationsChanged,
+  notificationsVersion,
+}) {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("needs_review");
-  const [summary, setSummary] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const [loadingSummary, setLoadingSummary] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [markingAll, setMarkingAll] = useState(false);
   const [error, setError] = useState("");
-
-  async function loadSummary() {
-    setLoadingSummary(true);
-
-    try {
-      const data = await fetchNotificationSummary();
-      setSummary(data);
-
-      setActiveTab((currentTab) => {
-        if (currentTab === "needs_review" && data.needs_review_count > 0) {
-          return currentTab;
-        }
-
-        if (currentTab === "unread" && data.unread_count > 0) {
-          return currentTab;
-        }
-
-        if (data.needs_review_count > 0) return "needs_review";
-        if (data.unread_count > 0) return "unread";
-        return "all";
-      });
-    } catch (err) {
-      setError(err.message || "Could not load notification summary.");
-    } finally {
-      setLoadingSummary(false);
-    }
-  }
 
   async function loadNotifications(tabToLoad) {
     setLoadingList(true);
@@ -111,20 +88,59 @@ export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
   }
 
   useEffect(() => {
-    if (!open) return;
-    loadSummary();
-  }, [open]);
+    if (!summary) return;
+
+    setActiveTab((currentTab) => {
+      if (currentTab === "needs_review" && summary.needs_review_count > 0) {
+        return currentTab;
+      }
+
+      if (currentTab === "unread" && summary.unread_count > 0) {
+        return currentTab;
+      }
+
+      if (summary.needs_review_count > 0) return "needs_review";
+      if (summary.unread_count > 0) return "unread";
+      return "all";
+    });
+  }, [summary]);
 
   useEffect(() => {
     if (!open) return;
-    loadNotifications(activeTab);
-  }, [open, activeTab]);
+
+    let cancelled = false;
+
+    async function loadMenuState() {
+      try {
+        if (onSummaryRefresh) {
+          await onSummaryRefresh();
+        }
+
+        if (!cancelled) {
+          await loadNotifications(activeTab);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Could not load notifications.");
+        }
+      }
+    }
+
+    loadMenuState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, activeTab, notificationsVersion, onSummaryRefresh]);
 
   async function refreshCurrentView() {
-    await Promise.all([loadSummary(), loadNotifications(activeTab)]);
-    if (onSummaryRefresh) {
+    if (onNotificationsChanged) {
+      await onNotificationsChanged();
+    } else if (onSummaryRefresh) {
       await onSummaryRefresh();
     }
+
+    await loadNotifications(activeTab);
   }
 
   async function handleNotificationClick(notification) {
@@ -137,10 +153,15 @@ export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
       if (!notification.is_read) {
         setBusyId(notification.id);
         await markNotificationRead(notification.id);
+
+        if (onNotificationsChanged) {
+          await onNotificationsChanged();
+        } else if (onSummaryRefresh) {
+          await onSummaryRefresh();
+        }
       }
 
       if (isActionCard) {
-        await refreshCurrentView();
         return;
       }
 
@@ -287,11 +308,9 @@ export default function NotificationMenu({ open, onClose, onSummaryRefresh }) {
         <div>
           <strong>Notifications</strong>
           <p className="nav-dropdown__subtext">
-            {loadingSummary
-              ? "Loading summary..."
-              : `${summary?.unread_count || 0} unread • ${
-                  summary?.needs_review_count || 0
-                } needs review`}
+            {`${summary?.unread_count || 0} unread • ${
+              summary?.needs_review_count || 0
+            } needs review`}
           </p>
         </div>
 

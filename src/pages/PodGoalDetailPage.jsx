@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
+import { useNotifications } from "../hooks/useNotifications";
 import FormDropdown from "../components/FormDropdown";
 import "./GoalDetailPage.css";
 
@@ -750,7 +751,7 @@ function StatusPill({ children, tone = "inactive" }) {
 
 export default function PodGoalDetailPage() {
   const { podId, podGoalId } = useParams();
-
+  const { signalNotificationChange } = useNotifications();
   const [goal, setGoal] = useState(null);
   const [pod, setPod] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -1005,169 +1006,173 @@ export default function PodGoalDetailPage() {
     setComments(Array.isArray(commentsData) ? commentsData : []);
   }
 
-  async function handleApprove(checkinId) {
-    try {
-      clearActionMessages();
+async function handleApprove(checkinId) {
+  try {
+    clearActionMessages();
 
-      const response = await authFetch(`pod-checkins/${checkinId}/approve/`, {
-        method: "POST",
-      });
+    const response = await authFetch(`pod-checkins/${checkinId}/approve/`, {
+      method: "POST",
+    });
 
-      const data = await response.json().catch(() => ({}));
+    const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(data?.detail || "Failed to approve check-in.");
-      }
-
-      setActionSuccess("Pod check-in approved.");
-      await refreshPageData();
-    } catch (err) {
-      setActionError(err.message || "Failed to approve check-in.");
+    if (!response.ok) {
+      throw new Error(data?.detail || "Failed to approve check-in.");
     }
+
+    setActionSuccess("Pod check-in approved.");
+    await refreshPageData();
+    await signalNotificationChange();
+  } catch (err) {
+    setActionError(err.message || "Failed to approve check-in.");
   }
+}
 
   async function handleReject(checkinId) {
-    const reason = window.prompt(
-      "Add a reason for rejecting this pod check-in:",
-      ""
-    );
+  const reason = window.prompt(
+    "Add a reason for rejecting this pod check-in:",
+    ""
+  );
 
-    if (reason === null) return;
+  if (reason === null) return;
 
-    try {
-      clearActionMessages();
+  try {
+    clearActionMessages();
 
-      const response = await authFetch(`pod-checkins/${checkinId}/reject/`, {
-        method: "POST",
-        body: JSON.stringify({ reason }),
-      });
+    const response = await authFetch(`pod-checkins/${checkinId}/reject/`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
 
-      const data = await response.json().catch(() => ({}));
+    const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(data?.detail || "Failed to reject check-in.");
-      }
-
-      setActionSuccess("Pod check-in rejected.");
-      await refreshPageData();
-    } catch (err) {
-      setActionError(err.message || "Failed to reject check-in.");
+    if (!response.ok) {
+      throw new Error(data?.detail || "Failed to reject check-in.");
     }
+
+    setActionSuccess("Pod check-in rejected.");
+    await refreshPageData();
+    await signalNotificationChange();
+  } catch (err) {
+    setActionError(err.message || "Failed to reject check-in.");
   }
+}
 
   async function handleSubmitCheckIn(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const value = goal.metric_type === "BINARY" ? 1 : Number(checkInValue);
+  const value = goal.metric_type === "BINARY" ? 1 : Number(checkInValue);
 
-    if (!checkInAvailability.allowed) {
-      setActionError(checkInAvailability.reason || "Check-in unavailable.");
-      return;
-    }
-
-    if (!checkInDate) {
-      setActionError("Please choose a date for the check-in.");
-      return;
-    }
-
-    if (!Number.isFinite(value) || value < 1) {
-      setActionError("Please enter a value greater than 0.");
-      return;
-    }
-
-    try {
-      setSubmittingCheckIn(true);
-      clearActionMessages();
-
-      const formData = new FormData();
-      formData.append("pod_goal", String(goal.id));
-      formData.append("period_start", checkInDate);
-      formData.append("value", String(value));
-      formData.append("note", checkInNote.trim());
-
-      if (checkInProof) {
-        console.log("checkInProof:", checkInProof);
-        console.log("is File:", checkInProof instanceof File);
-        console.log("name:", checkInProof?.name);
-        formData.append("proof", checkInProof);
-      }
-
-      const response = await authFetch("pod-checkins/", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const firstEntry = Object.entries(data)[0];
-
-        if (firstEntry) {
-          const [field, messages] = firstEntry;
-          const message = Array.isArray(messages) ? messages[0] : messages;
-          throw new Error(`${field}: ${message}`);
-        }
-
-        throw new Error(data?.detail || "Failed to create pod check-in.");
-      }
-
-      setCheckInNote("");
-      setCheckInProof(null);
-      setShowCheckInForm(false);
-      setActionSuccess("Pod check-in submitted.");
-      await refreshPageData();
-    } catch (err) {
-      setActionError(err.message || "Failed to create pod check-in.");
-    } finally {
-      setSubmittingCheckIn(false);
-    }
+  if (!checkInAvailability.allowed) {
+    setActionError(checkInAvailability.reason || "Check-in unavailable.");
+    return;
   }
+
+  if (!checkInDate) {
+    setActionError("Please choose a date for the check-in.");
+    return;
+  }
+
+  if (!Number.isFinite(value) || value < 1) {
+    setActionError("Please enter a value greater than 0.");
+    return;
+  }
+
+  try {
+    setSubmittingCheckIn(true);
+    clearActionMessages();
+
+    const formData = new FormData();
+    formData.append("pod_goal", String(goal.id));
+    formData.append("period_start", checkInDate);
+    formData.append("value", String(value));
+    formData.append("note", checkInNote.trim());
+
+    if (checkInProof) {
+      console.log("checkInProof:", checkInProof);
+      console.log("is File:", checkInProof instanceof File);
+      console.log("name:", checkInProof?.name);
+      formData.append("proof", checkInProof);
+    }
+
+    const response = await authFetch("pod-checkins/", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const firstEntry = Object.entries(data)[0];
+
+      if (firstEntry) {
+        const [field, messages] = firstEntry;
+        const message = Array.isArray(messages) ? messages[0] : messages;
+        throw new Error(`${field}: ${message}`);
+      }
+
+      throw new Error(data?.detail || "Failed to create pod check-in.");
+    }
+
+    setCheckInNote("");
+    setCheckInProof(null);
+    setShowCheckInForm(false);
+    setActionSuccess("Pod check-in submitted.");
+    await refreshPageData();
+    await signalNotificationChange();
+  } catch (err) {
+    setActionError(err.message || "Failed to create pod check-in.");
+  } finally {
+    setSubmittingCheckIn(false);
+  }
+}
 
   async function handleSubmitComment(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (!commentBody.trim()) {
-      setActionError("Please write a comment first.");
-      return;
-    }
+  if (!commentBody.trim()) {
+    setActionError("Please write a comment first.");
+    return;
+  }
 
-    try {
-      setSubmittingComment(true);
-      clearActionMessages();
+  try {
+    setSubmittingComment(true);
+    clearActionMessages();
 
-      const response = await authFetch("pod-comments/", {
-        method: "POST",
-        body: JSON.stringify({
-          pod_goal: goal.id,
-          kind: commentKind,
-          body: commentBody.trim(),
-        }),
-      });
+    const response = await authFetch("pod-comments/", {
+      method: "POST",
+      body: JSON.stringify({
+        pod_goal: goal.id,
+        kind: commentKind,
+        body: commentBody.trim(),
+      }),
+    });
 
-      const data = await response.json().catch(() => ({}));
+    const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        const firstEntry = Object.entries(data)[0];
+    if (!response.ok) {
+      const firstEntry = Object.entries(data)[0];
 
-        if (firstEntry) {
-          const [field, messages] = firstEntry;
-          const message = Array.isArray(messages) ? messages[0] : messages;
-          throw new Error(`${field}: ${message}`);
-        }
-
-        throw new Error(data?.detail || "Failed to post comment.");
+      if (firstEntry) {
+        const [field, messages] = firstEntry;
+        const message = Array.isArray(messages) ? messages[0] : messages;
+        throw new Error(`${field}: ${message}`);
       }
 
-      setCommentBody("");
-      setCommentKind(DEFAULT_COMMENT_KIND);
-      setActionSuccess("Comment posted.");
-      await refreshPageData();
-    } catch (err) {
-      setActionError(err.message || "Failed to post comment.");
-    } finally {
-      setSubmittingComment(false);
+      throw new Error(data?.detail || "Failed to post comment.");
     }
+
+    setCommentBody("");
+    setCommentKind(DEFAULT_COMMENT_KIND);
+    setActionSuccess("Comment posted.");
+    await refreshPageData();
+    await signalNotificationChange();
+  } catch (err) {
+    setActionError(err.message || "Failed to post comment.");
+  } finally {
+    setSubmittingComment(false);
   }
+}
 
   if (loading) {
     return (

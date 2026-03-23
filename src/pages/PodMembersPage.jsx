@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
+import { useNotifications } from "../hooks/useNotifications";
 import "./PodMembersPage.css";
 
 function formatDate(value) {
@@ -116,7 +117,7 @@ function RowActionButton({
 
 export default function PodMembersPage() {
   const { podId } = useParams();
-
+  const { signalNotificationChange } = useNotifications();
   const [pod, setPod] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -324,6 +325,7 @@ const adminCount = useMemo(() => {
       setSearchTerm("");
       setSearchResults([]);
       await loadPod();
+      await signalNotificationChange();
     } catch (err) {
       setInviteError(err.message || "Could not send invite.");
     } finally {
@@ -364,6 +366,7 @@ const adminCount = useMemo(() => {
 
       setActionSuccess(successMessage);
       await loadPod();
+      await signalNotificationChange();
     } catch (err) {
       setActionError(err.message || "That action could not be completed.");
     } finally {

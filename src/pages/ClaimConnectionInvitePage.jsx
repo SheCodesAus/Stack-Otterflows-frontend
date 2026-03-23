@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
+import { useNotifications } from "../hooks/useNotifications";
 
 export default function ClaimConnectionInvitePage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { signalNotificationChange } = useNotifications();
 
   const [message, setMessage] = useState("Sending connection invite...");
   const [error, setError] = useState("");
@@ -27,6 +29,8 @@ export default function ClaimConnectionInvitePage() {
         }
 
         setMessage("Connection invite sent.");
+        await signalNotificationChange();
+
         window.setTimeout(() => {
           navigate("/connections");
         }, 1200);
@@ -39,7 +43,7 @@ export default function ClaimConnectionInvitePage() {
     if (token) {
       claimInvite();
     }
-  }, [token, navigate]);
+  }, [token, navigate, signalNotificationChange]);
 
   return (
     <section className="page-shell">

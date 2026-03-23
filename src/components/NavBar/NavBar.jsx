@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import getCurrentUser from "../../api/getCurrentUser";
-import { fetchNotificationSummary } from "../../api/notifications";
 import { useAuthStatus } from "../../hooks/useAuthStatus";
-import './NavBar.css'
+import { useNotifications } from "../../hooks/useNotifications";
+import "./NavBar.css";
 import bfLogo from "../../assets/PodFlow.png";
 
 import MobileMenu from "./MobileMenu";
@@ -15,7 +15,6 @@ function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notificationSummary, setNotificationSummary] = useState(null);
   const [user, setUser] = useState(null);
 
   const profileMenuRef = useRef(null);
@@ -23,20 +22,17 @@ function NavBar() {
 
   const { tokenExists, clearToken } = useAuthStatus();
 
+  const {
+    summary: notificationSummary,
+    refreshNotificationSummary,
+    signalNotificationChange,
+    clearNotifications,
+    version: notificationsVersion,
+  } = useNotifications();
+
   const createTarget = tokenExists
     ? "/dashboard#dashboard-quick-actions"
     : "/register";
-
-  const refreshNotificationSummary = useCallback(async () => {
-    if (!tokenExists) return;
-
-    try {
-      const summary = await fetchNotificationSummary();
-      setNotificationSummary(summary);
-    } catch (error) {
-      console.error("Failed to load notification summary:", error);
-    }
-  }, [tokenExists]);
 
   useEffect(() => {
     const onResize = () => {
@@ -68,52 +64,6 @@ function NavBar() {
   }, [tokenExists]);
 
   useEffect(() => {
-    if (!tokenExists) return;
-
-    let cancelled = false;
-
-    async function fetchSummary() {
-      try {
-        const summary = await fetchNotificationSummary();
-        if (!cancelled) {
-          setNotificationSummary(summary);
-        }
-      } catch (error) {
-        console.error("Failed to load notification summary:", error);
-      }
-    }
-
-    fetchSummary();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [tokenExists]);
-
-  useEffect(() => {
-    if (!tokenExists || !notificationsOpen) return;
-
-    let cancelled = false;
-
-    async function fetchSummary() {
-      try {
-        const summary = await fetchNotificationSummary();
-        if (!cancelled) {
-          setNotificationSummary(summary);
-        }
-      } catch (error) {
-        console.error("Failed to load notification summary:", error);
-      }
-    }
-
-    fetchSummary();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [tokenExists, notificationsOpen]);
-
-  useEffect(() => {
     function handleClickOutside(event) {
       if (
         profileMenuRef.current &&
@@ -138,15 +88,15 @@ function NavBar() {
     setMenuOpen(false);
   }
 
-function toggleMenu() {
-  setProfileMenuOpen(false);
-  setNotificationsOpen(false);
-  setMenuOpen((value) => !value);
-}
+  function toggleMenu() {
+    setProfileMenuOpen(false);
+    setNotificationsOpen(false);
+    setMenuOpen((value) => !value);
+  }
 
   function handleLogout() {
     clearToken();
-    setNotificationSummary(null);
+    clearNotifications();
     setUser(null);
     setProfileMenuOpen(false);
     setNotificationsOpen(false);
@@ -154,17 +104,17 @@ function toggleMenu() {
     navigate("/");
   }
 
-function handleProfileToggle() {
-  closeMenu();
-  setNotificationsOpen(false);
-  setProfileMenuOpen((value) => !value);
-}
+  function handleProfileToggle() {
+    closeMenu();
+    setNotificationsOpen(false);
+    setProfileMenuOpen((value) => !value);
+  }
 
-function handleNotificationsToggle() {
-  closeMenu();
-  setProfileMenuOpen(false);
-  setNotificationsOpen((value) => !value);
-}
+  function handleNotificationsToggle() {
+    closeMenu();
+    setProfileMenuOpen(false);
+    setNotificationsOpen((value) => !value);
+  }
 
   function handleProfileOpen() {
     setProfileMenuOpen(false);
@@ -310,7 +260,10 @@ function handleNotificationsToggle() {
                 <NotificationMenu
                   open={notificationsOpen}
                   onClose={() => setNotificationsOpen(false)}
+                  summary={notificationSummary}
                   onSummaryRefresh={refreshNotificationSummary}
+                  onNotificationsChanged={signalNotificationChange}
+                  notificationsVersion={notificationsVersion}
                 />
               )}
             </div>
