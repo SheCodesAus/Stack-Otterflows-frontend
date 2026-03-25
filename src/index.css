@@ -147,3 +147,31 @@ min-height: 100vh;
   z-index: 1;
   flex-shrink: 0;
 }
+
+/* Prevent native mobile date inputs from overflowing */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+/* Extra protection for form children inside grid/flex layouts */
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    font-size: 16px;
+  }
+}

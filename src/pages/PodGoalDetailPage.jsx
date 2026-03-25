@@ -4,6 +4,7 @@ import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
 import { useNotifications } from "../hooks/useNotifications";
 import FormDropdown from "../components/FormDropdown";
+import ReasonModal from "../components/ReasonModal";
 import "./GoalDetailPage.css";
 
 const DEFAULT_COMMENT_KIND = "COMMENT";
@@ -779,6 +780,11 @@ export default function PodGoalDetailPage() {
 
   const [showAllActivity, setShowAllActivity] = useState(false);
 
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectCheckinId, setRejectCheckinId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectBusy, setRejectBusy] = useState(false);
+
   useEffect(() => {
     async function loadPage() {
       try {
@@ -1028,35 +1034,42 @@ async function handleApprove(checkinId) {
   }
 }
 
-  async function handleReject(checkinId) {
-  const reason = window.prompt(
-    "Add a reason for rejecting this pod check-in:",
-    ""
-  );
-
-  if (reason === null) return;
-
-  try {
-    clearActionMessages();
-
-    const response = await authFetch(`pod-checkins/${checkinId}/reject/`, {
-      method: "POST",
-      body: JSON.stringify({ reason }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(data?.detail || "Failed to reject check-in.");
-    }
-
-    setActionSuccess("Pod check-in rejected.");
-    await refreshPageData();
-    await signalNotificationChange();
-  } catch (err) {
-    setActionError(err.message || "Failed to reject check-in.");
+  function handleReject(checkinId) {
+    setRejectCheckinId(checkinId);
+    setRejectReason("");
+    setRejectModalOpen(true);
   }
-}
+
+  async function submitReject() {
+    if (rejectCheckinId == null) return;
+
+    try {
+      setRejectBusy(true);
+      clearActionMessages();
+
+      const response = await authFetch(`pod-checkins/${rejectCheckinId}/reject/`, {
+        method: "POST",
+        body: JSON.stringify({ reason: rejectReason }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.detail || "Failed to reject check-in.");
+      }
+
+      setActionSuccess("Pod check-in rejected.");
+      setRejectModalOpen(false);
+      setRejectCheckinId(null);
+      setRejectReason("");
+      await refreshPageData();
+      await signalNotificationChange();
+    } catch (err) {
+      setActionError(err.message || "Failed to reject check-in.");
+    } finally {
+      setRejectBusy(false);
+    }
+  }
 
   async function handleSubmitCheckIn(event) {
   event.preventDefault();
@@ -1838,6 +1851,24 @@ async function handleApprove(checkinId) {
           <p className="goal-empty-text">No activity yet.</p>
         )}
       </article>
+
+      <ReasonModal
+        open={rejectModalOpen}
+        title="Reject pod check-in"
+        label="Reason for rejection"
+        placeholder="Add a reason..."
+        value={rejectReason}
+        onChange={setRejectReason}
+        onClose={() => {
+          if (rejectBusy) return;
+          setRejectModalOpen(false);
+          setRejectCheckinId(null);
+          setRejectReason("");
+        }}
+        onSubmit={submitReject}
+        submitLabel="Reject pod check-in"
+        busy={rejectBusy}
+      />
     </section>
   );
 }

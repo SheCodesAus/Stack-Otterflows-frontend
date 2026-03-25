@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import getCurrentUser from "../api/getCurrentUser";
 import { useNotifications } from "../hooks/useNotifications";
+import ConfirmModal from "../components/ConfirmModal";
 import "./PodMembersPage.css";
 
 function formatDate(value) {
@@ -138,6 +139,14 @@ export default function PodMembersPage() {
   const [actionState, setActionState] = useState({
     membershipId: null,
     type: "",
+  });
+
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    confirmLabel: "",
+    onConfirm: null,
   });
 
   const loadPod = useCallback(async () => {
@@ -380,6 +389,17 @@ const adminCount = useMemo(() => {
     );
   }
 
+
+  function closeConfirmModal() {
+    setConfirmModal({
+      open: false,
+      title: "",
+      message: "",
+      confirmLabel: "",
+      onConfirm: null,
+    });
+  }
+
   function handleToggleRole(member) {
     const nextRole = member.role === "ADMIN" ? "MEMBER" : "ADMIN";
 
@@ -394,32 +414,34 @@ const adminCount = useMemo(() => {
   }
 
   function handleRemoveMember(member) {
-    const confirmed = window.confirm(
-      `Remove ${getDisplayName(member)} from this pod?`
-    );
-
-    if (!confirmed) return;
-
-    runMembershipAction({
-      membershipId: member.id,
-      type: "remove",
-      endpoint: `pod-memberships/${member.id}/remove/`,
-      successMessage: `${getDisplayName(member)} was removed from the pod.`,
+    setConfirmModal({
+      open: true,
+      title: "Remove member?",
+      message: `Remove ${getDisplayName(member)} from this pod?`,
+      confirmLabel: "Remove member",
+      onConfirm: () =>
+        runMembershipAction({
+          membershipId: member.id,
+          type: "remove",
+          endpoint: `pod-memberships/${member.id}/remove/`,
+          successMessage: `${getDisplayName(member)} was removed from the pod.`,
+        }),
     });
   }
 
   function handleCancelInvite(member) {
-    const confirmed = window.confirm(
-      `Cancel the invite for ${getDisplayName(member)}?`
-    );
-
-    if (!confirmed) return;
-
-    runMembershipAction({
-      membershipId: member.id,
-      type: "cancel",
-      endpoint: `pod-memberships/${member.id}/cancel/`,
-      successMessage: `Invite cancelled for ${getDisplayName(member)}.`,
+    setConfirmModal({
+      open: true,
+      title: "Cancel invite?",
+      message: `Cancel the invite for ${getDisplayName(member)}?`,
+      confirmLabel: "Cancel invite",
+      onConfirm: () =>
+        runMembershipAction({
+          membershipId: member.id,
+          type: "cancel",
+          endpoint: `pod-memberships/${member.id}/cancel/`,
+          successMessage: `Invite cancelled for ${getDisplayName(member)}.`,
+        }),
     });
   }
 
@@ -811,6 +833,18 @@ const adminCount = useMemo(() => {
           <p className="pod-empty-text">No pending invites right now.</p>
         )}
       </article>
+
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmLabel={confirmModal.confirmLabel}
+        onClose={closeConfirmModal}
+        onConfirm={() => {
+          confirmModal.onConfirm?.();
+          closeConfirmModal();
+        }}
+      />
     </section>
   );
 }

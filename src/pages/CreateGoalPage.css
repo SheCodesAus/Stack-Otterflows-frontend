@@ -153,6 +153,8 @@
 .create-goal-field input,
 .create-goal-field textarea {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.04);

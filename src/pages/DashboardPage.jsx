@@ -80,20 +80,6 @@ function formatReviewCount(count) {
   return `${count} pending reviews`;
 }
 
-function isCheckInReviewNotification(notification) {
-  const type = notification?.notif_type || "";
-  const typeLabel = (notification?.type_label || "").toLowerCase();
-  const title = (notification?.title || "").toLowerCase();
-
-  return (
-    type.includes("CHECKIN") ||
-    typeLabel.includes("check-in") ||
-    typeLabel.includes("check in") ||
-    title.includes("check-in") ||
-    title.includes("check in")
-  );
-}
-
 function getReviewFallbackUrl(notification) {
   if (notification?.target_url) return notification.target_url;
 
@@ -240,12 +226,20 @@ export default function DashboardPage() {
         });
 
         const reviewNotifications = Array.isArray(needsReviewNotifications)
-          ? needsReviewNotifications
-          : [];
+  ? needsReviewNotifications
+  : Array.isArray(needsReviewNotifications?.results)
+    ? needsReviewNotifications.results
+    : [];
 
-        const realReviewItems = reviewNotifications
-          .filter(isCheckInReviewNotification)
-          .map(normaliseReviewItem);
+const realReviewItems = reviewNotifications
+  .filter(
+    (notification) =>
+      notification?.is_needs_review &&
+      ["CHECKIN_SUBMITTED", "POD_CHECKIN_SUBMITTED"].includes(
+        notification?.notif_type
+      )
+  )
+  .map(normaliseReviewItem);
 
         const assignments = Array.isArray(assignmentsData) ? assignmentsData : [];
         const acceptedAssignments = assignments.filter(
