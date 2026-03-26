@@ -80,6 +80,7 @@
   line-height: 1.65;
   font-weight: 700;
   max-width: 760px;
+  white-space: pre-line;
 }
 
 .pod-detail-hero__actions {
@@ -270,6 +271,7 @@
   font-size: 0.96rem;
   line-height: 1.5;
   font-weight: 700;
+  white-space: pre-line;
 }
 
 .pod-goal-item__details {

@@ -411,14 +411,14 @@ export default function CreateGoalPage() {
             {error ? <p className="create-goal-error">{error}</p> : null}
 
             <div className="create-goal-actions">
-              <Link to="/goals" className="btn link">
-                Cancel
-              </Link>
+  <Link to="/goals" className="btn create-goal-cancel-btn">
+    Cancel
+  </Link>
 
-              <button type="submit" className="btn primary" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Goal"}
-              </button>
-            </div>
+  <button type="submit" className="btn primary" disabled={isSubmitting}>
+    {isSubmitting ? "Creating..." : "Create Goal"}
+  </button>
+</div>
           </form>
         </div>
       </div>
