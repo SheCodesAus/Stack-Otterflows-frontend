@@ -5,6 +5,7 @@ import getCurrentUser from "../api/getCurrentUser";
 import { useNotifications } from "../hooks/useNotifications";
 import FormDropdown from "../components/FormDropdown";
 import ReasonModal from "../components/ReasonModal";
+import LoadingState from "../components/LoadingState";
 import "./GoalDetailPage.css";
 
 const DEFAULT_COMMENT_KIND = "COMMENT";
@@ -1187,19 +1188,23 @@ async function handleApprove(checkinId) {
   }
 }
 
-  if (loading) {
-    return (
-      <section className="page-shell goal-detail-page">
-        <div className="goal-detail-topbar">
-          <Link to={`/pods/${podId}`} className="goal-detail-backlink">
-            <span aria-hidden="true">←</span>
-            <span>Back to Pod</span>
-          </Link>
-        </div>
-        <p>Loading pod goal detail...</p>
-      </section>
-    );
-  }
+if (loading) {
+  return (
+    <section className="page-shell goal-detail-page">
+      <div className="goal-detail-topbar">
+        <Link to={`/pods/${podId}`} className="goal-detail-backlink">
+          <span aria-hidden="true">←</span>
+          <span>Back to Pod</span>
+        </Link>
+      </div>
+
+      <LoadingState
+        title="Loading pod goal"
+        message="Getting the shared goal details, check-ins, and comments ready."
+      />
+    </section>
+  );
+}
 
   if (error) {
     return (

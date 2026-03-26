@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import getCurrentUser from "../api/getCurrentUser";
 import { clearToken, hasToken } from "../api/auth";
+import LoadingState from "../components/LoadingState";
 
 function RequireAuth({ children }) {
   const location = useLocation();
@@ -41,7 +42,10 @@ function RequireAuth({ children }) {
   if (status === "checking") {
     return (
       <section className="page-shell">
-        <p>Checking your session...</p>
+        <LoadingState
+          title="Getting PodFlow ready"
+          message="Checking your session and loading your space."
+        />
       </section>
     );
   }

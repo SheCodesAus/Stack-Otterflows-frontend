@@ -5,6 +5,7 @@ import getCurrentUser from "../api/getCurrentUser";
 import { useNotifications } from "../hooks/useNotifications";
 import FormDropdown from "../components/FormDropdown";
 import ReasonModal from "../components/ReasonModal";
+import LoadingState from "../components/LoadingState";
 import "./GoalDetailPage.css";
 
 const DEFAULT_COMMENT_KIND = "COMMENT";
@@ -1322,19 +1323,23 @@ async function handleApprove(checkinId) {
   }
 }
 
-  if (loading) {
-    return (
-      <section className="page-shell goal-detail-page">
-        <div className="goal-detail-topbar">
-          <Link to="/goals" className="goal-detail-backlink">
-            <span aria-hidden="true">←</span>
-            <span>Back to Goals</span>
-          </Link>
-        </div>
-        <p>Loading goal detail...</p>
-      </section>
-    );
-  }
+if (loading) {
+  return (
+    <section className="page-shell goal-detail-page">
+      <div className="goal-detail-topbar">
+        <Link to="/goals" className="goal-detail-backlink">
+          <span aria-hidden="true">←</span>
+          <span>Back to Goals</span>
+        </Link>
+      </div>
+
+      <LoadingState
+        title="Loading goal"
+        message="Getting your goal details, progress, and check-ins ready."
+      />
+    </section>
+  );
+}
 
   if (error) {
     return (
@@ -1783,7 +1788,11 @@ async function handleApprove(checkinId) {
                 {showAssignForm ? (
                   <>
                     {loadingConnections ? (
-                      <p className="goal-empty-text">Loading accepted connections...</p>
+                      <LoadingState
+  inline
+  title="Loading connections"
+  message="Checking your accepted connections for buddy options."
+/>
                     ) : availableConnections.length ? (
                       <form className="goal-inline-form" onSubmit={handleAssignBuddy}>
                         <div className="goal-inline-form__grid">

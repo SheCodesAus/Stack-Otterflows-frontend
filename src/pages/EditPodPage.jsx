@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import FormDropdown from "../components/FormDropdown";
+import LoadingState from "../components/LoadingState";
 import "./CreateGoalPage.css";
 
 const categoryOptions = [
@@ -143,9 +144,12 @@ export default function EditPodPage() {
             </Link>
 
             <header className="create-goal-header">
-              <h1>Edit Pod</h1>
-              <p>Loading pod details...</p>
-            </header>
+  <h1>Edit Pod</h1>
+  <LoadingState
+    title="Loading pod"
+    message="Pulling in the pod details and description."
+  />
+</header>
           </section>
         </div>
       </section>

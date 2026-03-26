@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import { useNotifications } from "../hooks/useNotifications";
+import LoadingState from "../components/LoadingState";
 
 export default function ClaimPodInvitePage() {
   const { token } = useParams();
@@ -121,10 +122,11 @@ export default function ClaimPodInvitePage() {
         </div>
 
         {loading ? (
-          <div className="connections-state-card">
-            <p>Checking your pod invite...</p>
-          </div>
-        ) : null}
+  <LoadingState
+    title="Checking your pod invite"
+    message="Just a moment while we get everything ready."
+  />
+) : null}
 
         {feedback ? (
           <div className="connections-feedback-card">

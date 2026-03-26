@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 import FormDropdown from "../components/FormDropdown";
+import LoadingState from "../components/LoadingState";
 import "./CreateGoalPage.css";
 
 const categoryOptions = [
@@ -285,9 +286,12 @@ export default function EditGoalPage() {
             </Link>
 
             <header className="create-goal-header">
-              <h1>Edit Goal</h1>
-              <p>Loading goal details...</p>
-            </header>
+  <h1>Edit Goal</h1>
+  <LoadingState
+    title="Loading goal"
+    message="Pulling in your goal details and settings."
+  />
+</header>
           </section>
         </div>
       </section>
