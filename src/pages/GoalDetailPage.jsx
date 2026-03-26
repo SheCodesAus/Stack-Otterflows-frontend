@@ -6,6 +6,7 @@ import { useNotifications } from "../hooks/useNotifications";
 import FormDropdown from "../components/FormDropdown";
 import ReasonModal from "../components/ReasonModal";
 import LoadingState from "../components/LoadingState";
+import NotFoundPage from "./NotFoundPage";
 import "./GoalDetailPage.css";
 
 const DEFAULT_COMMENT_KIND = "COMMENT";
@@ -801,6 +802,7 @@ export default function GoalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
 
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
@@ -829,11 +831,22 @@ export default function GoalDetailPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
 
+  const isValidGoalId = /^\d+$/.test(goalId);
+
   useEffect(() => {
     async function loadPage() {
+      if (!isValidGoalId) {
+        setNotFound(true);
+        setGoal(null);
+        setError("");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
+        setNotFound(false);
 
         const [currentUserData, goalResponse] = await Promise.all([
           getCurrentUser().catch(() => null),
@@ -843,6 +856,12 @@ export default function GoalDetailPage() {
         setCurrentUser(currentUserData);
 
         const goalData = await goalResponse.json().catch(() => ({}));
+
+        if (goalResponse.status === 404) {
+          setNotFound(true);
+          setGoal(null);
+          return;
+        }
 
         if (!goalResponse.ok) {
           throw new Error(
@@ -860,7 +879,7 @@ export default function GoalDetailPage() {
     }
 
     loadPage();
-  }, [goalId]);
+  }, [goalId, isValidGoalId]);
 
   useEffect(() => {
     if (!goal) return;
@@ -1341,33 +1360,27 @@ if (loading) {
   );
 }
 
-  if (error) {
-    return (
-      <section className="page-shell goal-detail-page">
-        <div className="goal-detail-topbar">
-          <Link to="/goals" className="goal-detail-backlink">
-            <span aria-hidden="true">←</span>
-            <span>Back to Goals</span>
-          </Link>
-        </div>
-        <p>{error}</p>
-      </section>
-    );
-  }
+if (notFound) {
+  return <NotFoundPage />;
+}
 
-  if (!goal) {
-    return (
-      <section className="page-shell goal-detail-page">
-        <div className="goal-detail-topbar">
-          <Link to="/goals" className="goal-detail-backlink">
-            <span aria-hidden="true">←</span>
-            <span>Back to Goals</span>
-          </Link>
-        </div>
-        <p>Goal not found.</p>
-      </section>
-    );
-  }
+if (error) {
+  return (
+    <section className="page-shell goal-detail-page">
+      <div className="goal-detail-topbar">
+        <Link to="/goals" className="goal-detail-backlink">
+          <span aria-hidden="true">←</span>
+          <span>Back to Goals</span>
+        </Link>
+      </div>
+      <p>{error}</p>
+    </section>
+  );
+}
+
+if (!goal) {
+  return <NotFoundPage />;
+}
 
   return (
     <section className="page-shell goal-detail-page">
