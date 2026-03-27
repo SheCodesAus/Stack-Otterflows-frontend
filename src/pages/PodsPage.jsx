@@ -131,6 +131,8 @@ export default function PodsPage() {
         const response = await authFetch("pods/");
         const data = await response.json().catch(() => ({}));
 
+        console.log("pods response:", data);
+
         if (!response.ok) {
           throw new Error(
             data?.detail || `Failed to load pods (${response.status})`
