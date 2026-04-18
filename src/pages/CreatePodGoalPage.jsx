@@ -413,7 +413,7 @@ export default function CreatePodGoalPage() {
             {error ? <p className="create-goal-error">{error}</p> : null}
 
             <div className="create-goal-actions">
-              <Link to={`/pods/${podId}`} className="btn link">
+              <Link to={`/pods/${podId}`} className="btn create-goal-cancel-btn">
                 Cancel
               </Link>
 
