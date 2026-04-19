@@ -87,23 +87,21 @@ export default function NotificationMenu({
     }
   }
 
-  useEffect(() => {
-    if (!summary) return;
+useEffect(() => {
+  if (!summary) return;
 
-    setActiveTab((currentTab) => {
-      if (currentTab === "needs_review" && summary.needs_review_count > 0) {
-        return currentTab;
-      }
+  setActiveTab((currentTab) => {
+    const currentCount = getTabCount(summary, currentTab);
 
-      if (currentTab === "unread" && summary.unread_count > 0) {
-        return currentTab;
-      }
+    if (currentCount > 0) {
+      return currentTab;
+    }
 
-      if (summary.needs_review_count > 0) return "needs_review";
-      if (summary.unread_count > 0) return "unread";
-      return "all";
-    });
-  }, [summary]);
+    if (summary.needs_review_count > 0) return "needs_review";
+    if (summary.unread_count > 0) return "unread";
+    return "all";
+  });
+}, [summary]);
 
   useEffect(() => {
     if (!open) return;
